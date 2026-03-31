@@ -145,10 +145,16 @@ describe('SandboxManager Integration', () => {
   const manager = createSandboxManager({ enabled: true }, { workspace });
 
   // Skip if we are on an unsupported platform or if it's a NoopSandboxManager
+  let sandboxAvailable = false;
+  try {
+    sandboxAvailable = ensureSandboxAvailable();
+  } catch {
+    // bwrap or sandbox-exec not installed — skip gracefully
+  }
   const shouldSkip =
     manager instanceof NoopSandboxManager ||
     manager instanceof LocalSandboxManager ||
-    !ensureSandboxAvailable();
+    !sandboxAvailable;
 
   describe.skipIf(shouldSkip)('Cross-platform Sandbox Behavior', () => {
     describe('Basic Execution', () => {
