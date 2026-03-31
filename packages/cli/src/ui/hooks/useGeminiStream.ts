@@ -4,7 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  startTransition,
+} from 'react';
 import {
   GeminiEventType as ServerGeminiEventType,
   getErrorMessage,
@@ -836,12 +843,17 @@ export const useGeminiStream = (
       // we should maximize the amount of output sent to <Static />.
       const splitPoint = findLastSafeSplitPoint(newGeminiMessageBuffer);
       if (splitPoint === newGeminiMessageBuffer.length) {
-        // Update the existing message with accumulated content
-        setPendingHistoryItem((item) => ({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          type: item?.type as 'gemini' | 'gemini_content',
-          text: newGeminiMessageBuffer,
-        }));
+        // Update the existing message with accumulated content.
+        // startTransition marks this as a non-urgent update so React can
+        // batch it and keep input handling responsive during streaming.
+        const bufferSnapshot = newGeminiMessageBuffer;
+        startTransition(() => {
+          setPendingHistoryItem((item) => ({
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+            type: item?.type as 'gemini' | 'gemini_content',
+            text: bufferSnapshot,
+          }));
+        });
       } else {
         // This indicates that we need to split up this Gemini Message.
         // Splitting a message is primarily a performance consideration. There is a
@@ -865,7 +877,9 @@ export const useGeminiStream = (
             userMessageTimestamp,
           );
         }
-        setPendingHistoryItem({ type: 'gemini_content', text: afterText });
+        startTransition(() => {
+          setPendingHistoryItem({ type: 'gemini_content', text: afterText });
+        });
         newGeminiMessageBuffer = afterText;
       }
       return newGeminiMessageBuffer;
@@ -875,7 +889,9 @@ export const useGeminiStream = (
 
   const handleThoughtEvent = useCallback(
     (eventValue: ThoughtSummary, _userMessageTimestamp: number) => {
-      setThought(eventValue);
+      startTransition(() => {
+        setThought(eventValue);
+      });
 
       if (getInlineThinkingMode(settings) === 'full') {
         addItem({
@@ -1167,6 +1183,32 @@ export const useGeminiStream = (
     ): Promise<StreamProcessingStatus> => {
       let geminiMessageBuffer = '';
       const toolCallRequests: ToolCallRequestInfo[] = [];
+
+      // Token buffering: accumulate content deltas and flush at ~30fps
+      // instead of triggering React state updates on every token (~100+/sec).
+      // The first content event is processed immediately for instant visual
+      // feedback; subsequent events within the same flush window are batched.
+      let pendingContentDelta = '';
+      let contentFlushTimer: ReturnType<typeof setTimeout> | null = null;
+      let hasReceivedFirstContent = false;
+      const FLUSH_INTERVAL_MS = 32; // ~30fps
+
+      const flushContentBuffer = () => {
+        if (contentFlushTimer) {
+          clearTimeout(contentFlushTimer);
+          contentFlushTimer = null;
+        }
+        if (pendingContentDelta) {
+          const delta = pendingContentDelta;
+          pendingContentDelta = '';
+          geminiMessageBuffer = handleContentEvent(
+            delta,
+            geminiMessageBuffer,
+            userMessageTimestamp,
+          );
+        }
+      };
+
       for await (const event of stream) {
         if (
           event.type !== ServerGeminiEventType.Thought &&
@@ -1177,27 +1219,44 @@ export const useGeminiStream = (
 
         switch (event.type) {
           case ServerGeminiEventType.Thought:
+            flushContentBuffer();
             setLastGeminiActivityTime(Date.now());
             handleThoughtEvent(event.value, userMessageTimestamp);
             break;
           case ServerGeminiEventType.Content:
             setLastGeminiActivityTime(Date.now());
-            geminiMessageBuffer = handleContentEvent(
-              event.value,
-              geminiMessageBuffer,
-              userMessageTimestamp,
-            );
+            if (!hasReceivedFirstContent) {
+              // Process the first content event immediately for instant feedback
+              hasReceivedFirstContent = true;
+              geminiMessageBuffer = handleContentEvent(
+                event.value,
+                geminiMessageBuffer,
+                userMessageTimestamp,
+              );
+            } else {
+              pendingContentDelta += event.value;
+              if (!contentFlushTimer) {
+                contentFlushTimer = setTimeout(
+                  flushContentBuffer,
+                  FLUSH_INTERVAL_MS,
+                );
+              }
+            }
             break;
           case ServerGeminiEventType.ToolCallRequest:
+            flushContentBuffer();
             toolCallRequests.push(event.value);
             break;
           case ServerGeminiEventType.UserCancelled:
+            flushContentBuffer();
             handleUserCancelledEvent(userMessageTimestamp);
             break;
           case ServerGeminiEventType.Error:
+            flushContentBuffer();
             handleErrorEvent(event.value, userMessageTimestamp);
             break;
           case ServerGeminiEventType.AgentExecutionStopped:
+            flushContentBuffer();
             handleAgentExecutionStoppedEvent(
               event.value.reason,
               userMessageTimestamp,
@@ -1206,6 +1265,7 @@ export const useGeminiStream = (
             );
             break;
           case ServerGeminiEventType.AgentExecutionBlocked:
+            flushContentBuffer();
             handleAgentExecutionBlockedEvent(
               event.value.reason,
               userMessageTimestamp,
@@ -1214,6 +1274,7 @@ export const useGeminiStream = (
             );
             break;
           case ServerGeminiEventType.ChatCompressed:
+            flushContentBuffer();
             handleChatCompressionEvent(event.value, userMessageTimestamp);
             break;
           case ServerGeminiEventType.ToolCallConfirmation:
@@ -1230,6 +1291,7 @@ export const useGeminiStream = (
             );
             break;
           case ServerGeminiEventType.Finished:
+            flushContentBuffer();
             handleFinishedEvent(event, userMessageTimestamp);
             break;
           case ServerGeminiEventType.Citation:
@@ -1254,6 +1316,9 @@ export const useGeminiStream = (
           }
         }
       }
+      // Final flush: ensure any remaining buffered content is processed
+      flushContentBuffer();
+
       if (toolCallRequests.length > 0) {
         if (pendingHistoryItemRef.current) {
           addItem(pendingHistoryItemRef.current, userMessageTimestamp);

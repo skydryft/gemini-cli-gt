@@ -158,6 +158,14 @@ export async function startInteractiveUI(
         settings.merged.ui.incrementalRendering !== false &&
         useAlternateBuffer &&
         !isShpool,
+      terminalBuffer:
+        settings.merged.ui.terminalBufferRendering !== false &&
+        useAlternateBuffer &&
+        !isShpool,
+      maxFps:
+        typeof settings.merged.ui.maxFps === 'number'
+          ? Math.max(1, Math.min(60, settings.merged.ui.maxFps))
+          : 30,
     },
   );
 

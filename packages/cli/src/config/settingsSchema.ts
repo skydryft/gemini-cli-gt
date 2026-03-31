@@ -742,6 +742,26 @@ const SETTINGS_SCHEMA = {
           'Enable incremental rendering for the UI. This option will reduce flickering but may cause rendering artifacts. Only supported when useAlternateBuffer is enabled.',
         showInDialog: true,
       },
+      terminalBufferRendering: {
+        type: 'boolean',
+        label: 'Terminal Buffer Rendering',
+        category: 'UI',
+        requiresRestart: true,
+        default: true,
+        description:
+          'Enable cell-level differential rendering for smoother output. Uses region tracking and line-level diffing instead of full screen redraws. Only supported when useAlternateBuffer is enabled.',
+        showInDialog: true,
+      },
+      maxFps: {
+        type: 'number',
+        label: 'Max FPS',
+        category: 'UI',
+        requiresRestart: true,
+        default: 30,
+        description:
+          'Maximum frames per second for terminal rendering. Lower values reduce CPU usage. Range: 1-60.',
+        showInDialog: false,
+      },
       showSpinner: {
         type: 'boolean',
         label: 'Show Spinner',
