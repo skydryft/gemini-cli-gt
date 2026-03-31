@@ -149,7 +149,7 @@ exports[`coreTools snapshots for specific models > Model: gemini-2.5-pro > snaps
 
 exports[`coreTools snapshots for specific models > Model: gemini-2.5-pro > snapshot for tool: enter_plan_mode 1`] = `
 {
-  "description": "Switch to Plan Mode to safely research, design, and plan complex changes using read-only tools.",
+  "description": "Switch to Plan Mode to safely research, design, and plan complex changes. You MUST use this tool (not shell) when: (1) the task requires 3+ steps, (2) you need to explore the codebase before making changes, (3) the user asks you to plan or think through an approach, (4) you are unsure how to proceed. Plan Mode gives you read-only access to explore safely before committing to changes.",
   "name": "enter_plan_mode",
   "parametersJsonSchema": {
     "properties": {
@@ -967,7 +967,7 @@ exports[`coreTools snapshots for specific models > Model: gemini-3-pro-preview >
 
 exports[`coreTools snapshots for specific models > Model: gemini-3-pro-preview > snapshot for tool: enter_plan_mode 1`] = `
 {
-  "description": "Switch to Plan Mode to safely research, design, and plan complex changes using read-only tools.",
+  "description": "Switch to Plan Mode to safely research, design, and plan complex changes. You MUST use this tool (not shell) when: (1) the task requires 3+ steps, (2) you need to explore the codebase before making changes, (3) the user asks you to plan or think through an approach, (4) you are unsure how to proceed. Plan Mode gives you read-only access to explore safely before committing to changes.",
   "name": "enter_plan_mode",
   "parametersJsonSchema": {
     "properties": {

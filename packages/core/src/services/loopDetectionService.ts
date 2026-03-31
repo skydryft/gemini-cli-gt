@@ -151,7 +151,7 @@ export class LoopDetectionService {
   private lastLoopType?: LoopType;
 
   // Semantic repetition tracking (word salad detection)
-  private responseTrigramSets: Set<string>[] = [];
+  private responseTrigramSets: Array<Set<string>> = [];
   private consecutiveHighSimilarityCount = 0;
   private static readonly SEMANTIC_SIMILARITY_THRESHOLD = 0.85;
   private static readonly SEMANTIC_REPETITION_CONSECUTIVE_THRESHOLD = 5;

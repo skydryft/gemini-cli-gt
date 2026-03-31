@@ -248,6 +248,7 @@ describe('Gemini Client (client.ts)', () => {
       getEnableHooks: vi.fn().mockReturnValue(false),
       getChatCompression: vi.fn().mockReturnValue(undefined),
       getCompressionThreshold: vi.fn().mockReturnValue(undefined),
+      getCompressionPreserveRatio: vi.fn().mockReturnValue(undefined),
       getSkipNextSpeakerCheck: vi.fn().mockReturnValue(false),
       getShowModelInfoInChat: vi.fn().mockReturnValue(false),
       getContinueOnFailedApiCall: vi.fn(),
@@ -279,6 +280,9 @@ describe('Gemini Client (client.ts)', () => {
       getActiveModel: vi.fn().mockReturnValue('test-model'),
       setActiveModel: vi.fn(),
       resetTurn: vi.fn(),
+      getLoopDetectionToolCallThreshold: vi.fn().mockReturnValue(undefined),
+      getLoopDetectionContentThreshold: vi.fn().mockReturnValue(undefined),
+      getLoopDetectionLlmCheckAfterTurns: vi.fn().mockReturnValue(undefined),
       isExperimentalAgentHistoryTruncationEnabled: vi
         .fn()
         .mockReturnValue(false),

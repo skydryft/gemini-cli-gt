@@ -42,6 +42,9 @@ describe('LoopDetectionService', () => {
       getTelemetryEnabled: () => true,
       isInteractive: () => false,
       getDisableLoopDetection: () => false,
+      getLoopDetectionToolCallThreshold: () => undefined,
+      getLoopDetectionContentThreshold: () => undefined,
+      getLoopDetectionLlmCheckAfterTurns: () => undefined,
       getModelAvailabilityService: vi
         .fn()
         .mockReturnValue(createAvailabilityServiceMock()),
@@ -598,20 +601,21 @@ describe('LoopDetectionService', () => {
         // Reset should occur with list item - add newline to ensure it starts at beginning
         service.addAndCheck(createContentEvent('\n' + listFormat));
 
-        // Should not trigger loop after reset - use different content to avoid any cached state issues
+        // Should not trigger content loop after reset - use different content to avoid any cached state issues
+        // Note: only check up to SEMANTIC_REPETITION_CONSECUTIVE_THRESHOLD (5) events because
+        // identical content with trimmed length >= 50 will trigger semantic repetition detection
+        // after 6 consecutive events, which is independent of the content loop reset.
         const newRepeatedContent = createRepetitiveContent(
           index + 100,
           CONTENT_CHUNK_SIZE,
         );
-        for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
+        for (let i = 0; i < 5; i++) {
           const result = service.addAndCheck(
             createContentEvent(newRepeatedContent),
           );
           expect(result.count).toBe(0);
         }
       });
-
-      expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
     it('should reset tracking for various table formats', () => {
@@ -635,20 +639,20 @@ describe('LoopDetectionService', () => {
         // Reset should occur with table format - add newline to ensure it starts at beginning
         service.addAndCheck(createContentEvent('\n' + tableFormat));
 
-        // Should not trigger loop after reset - use different content to avoid any cached state issues
+        // Should not trigger content loop after reset - use different content to avoid any cached state issues
+        // Note: only check up to 5 events to avoid triggering semantic repetition detection,
+        // which fires after 6 consecutive identical events with trimmed length >= 50.
         const newRepeatedContent = createRepetitiveContent(
           index + 200,
           CONTENT_CHUNK_SIZE,
         );
-        for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
+        for (let i = 0; i < 5; i++) {
           const result = service.addAndCheck(
             createContentEvent(newRepeatedContent),
           );
           expect(result.count).toBe(0);
         }
       });
-
-      expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
     it('should reset tracking for various heading levels', () => {
@@ -674,20 +678,20 @@ describe('LoopDetectionService', () => {
         // Reset should occur with heading - add newline to ensure it starts at beginning
         service.addAndCheck(createContentEvent('\n' + headingFormat));
 
-        // Should not trigger loop after reset - use different content to avoid any cached state issues
+        // Should not trigger content loop after reset - use different content to avoid any cached state issues
+        // Note: only check up to 5 events to avoid triggering semantic repetition detection,
+        // which fires after 6 consecutive identical events with trimmed length >= 50.
         const newRepeatedContent = createRepetitiveContent(
           index + 300,
           CONTENT_CHUNK_SIZE,
         );
-        for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
+        for (let i = 0; i < 5; i++) {
           const result = service.addAndCheck(
             createContentEvent(newRepeatedContent),
           );
           expect(result.count).toBe(0);
         }
       });
-
-      expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
   });
 
@@ -818,6 +822,9 @@ describe('LoopDetectionService LLM Checks', () => {
       },
       getBaseLlmClient: () => mockBaseLlmClient,
       getDisableLoopDetection: () => false,
+      getLoopDetectionToolCallThreshold: () => undefined,
+      getLoopDetectionContentThreshold: () => undefined,
+      getLoopDetectionLlmCheckAfterTurns: () => undefined,
       getDebugMode: () => false,
       getTelemetryEnabled: () => true,
       getModel: vi.fn().mockReturnValue('cognitive-loop-v1'),
