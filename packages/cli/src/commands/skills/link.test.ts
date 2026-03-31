@@ -22,7 +22,7 @@ const { debugLogger } = await vi.hoisted(async () => {
   return createMockDebugLogger({ stripAnsi: false });
 });
 
-vi.mock('@google/gemini-cli-core', () => ({
+vi.mock('@skydryft/gemini-cli-core', () => ({
   debugLogger,
   getErrorMessage: vi.fn((e: unknown) =>
     e instanceof Error ? e.message : String(e),

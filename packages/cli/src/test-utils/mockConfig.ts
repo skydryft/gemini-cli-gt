@@ -5,8 +5,8 @@
  */
 
 import { vi } from 'vitest';
-import { NoopSandboxManager } from '@google/gemini-cli-core';
-import type { Config } from '@google/gemini-cli-core';
+import { NoopSandboxManager } from '@skydryft/gemini-cli-core';
+import type { Config } from '@skydryft/gemini-cli-core';
 import {
   createTestMergedSettings,
   type LoadedSettings,

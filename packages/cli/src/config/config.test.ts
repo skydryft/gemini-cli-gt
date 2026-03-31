@@ -21,14 +21,14 @@ import {
   type MCPServerConfig,
   type GeminiCLIExtension,
   Storage,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import { loadCliConfig, parseArguments, type CliArgs } from './config.js';
 import {
   type Settings,
   type MergedSettings,
   createTestMergedSettings,
 } from './settings.js';
-import * as ServerConfig from '@google/gemini-cli-core';
+import * as ServerConfig from '@skydryft/gemini-cli-core';
 
 import { isWorkspaceTrusted } from './trustedFolders.js';
 import { ExtensionManager } from './extension-manager.js';
@@ -98,9 +98,9 @@ vi.mock('read-package-up', () => ({
   ),
 }));
 
-vi.mock('@google/gemini-cli-core', async () => {
+vi.mock('@skydryft/gemini-cli-core', async () => {
   const actualServer = await vi.importActual<typeof ServerConfig>(
-    '@google/gemini-cli-core',
+    '@skydryft/gemini-cli-core',
   );
   return {
     ...actualServer,

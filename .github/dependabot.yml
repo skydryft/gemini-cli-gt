@@ -7,7 +7,7 @@ updates:
       day: 'monday'
     open-pull-requests-limit: 10
     reviewers:
-      - 'joshualitt'
+      - 'skydryft'
     groups:
       npm-dependencies:
         patterns:
@@ -23,7 +23,7 @@ updates:
       day: 'monday'
     open-pull-requests-limit: 10
     reviewers:
-      - 'joshualitt'
+      - 'skydryft'
     groups:
       actions-dependencies:
         patterns:

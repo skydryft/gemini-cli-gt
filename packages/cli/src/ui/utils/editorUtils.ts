@@ -13,7 +13,7 @@ import {
   getEditorCommand,
   isGuiEditor,
   isTerminalEditor,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 
 /**
  * Opens a file in an external editor and waits for it to close.

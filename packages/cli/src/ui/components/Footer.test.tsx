@@ -8,7 +8,7 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { renderWithProviders } from '../../test-utils/render.js';
 import { Footer } from './Footer.js';
 import { createMockSettings } from '../../test-utils/settings.js';
-import { type Config } from '@google/gemini-cli-core';
+import { type Config } from '@skydryft/gemini-cli-core';
 import path from 'node:path';
 
 // Normalize paths to POSIX slashes for stable cross-platform snapshots.
@@ -34,9 +34,9 @@ vi.mock('../../utils/installationInfo.js', async (importOriginal) => {
   };
 });
 
-vi.mock('@google/gemini-cli-core', async (importOriginal) => {
+vi.mock('@skydryft/gemini-cli-core', async (importOriginal) => {
   const original =
-    await importOriginal<typeof import('@google/gemini-cli-core')>();
+    await importOriginal<typeof import('@skydryft/gemini-cli-core')>();
   return {
     ...original,
     shortenPath: (p: string, len: number) => {

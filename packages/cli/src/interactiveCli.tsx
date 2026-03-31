@@ -25,7 +25,7 @@ import {
   writeToStdout,
   getVersion,
   debugLogger,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import type { InitializationResult } from './core/initializer.js';
 import type { LoadedSettings } from './config/settings.js';
 import { checkForUpdates } from './ui/utils/updateCheck.js';

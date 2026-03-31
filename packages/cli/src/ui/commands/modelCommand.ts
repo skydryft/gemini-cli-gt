@@ -7,7 +7,7 @@
 import {
   ModelSlashCommandEvent,
   logModelSlashCommand,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import {
   type CommandContext,
   CommandKind,

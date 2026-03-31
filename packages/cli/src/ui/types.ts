@@ -19,7 +19,7 @@ import {
   type AnsiOutput,
   CoreToolCallStatus,
   checkExhaustive,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import type { PartListUnion } from '@google/genai';
 import { type ReactNode } from 'react';
 

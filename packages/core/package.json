@@ -1,11 +1,14 @@
 {
-  "name": "@google/gemini-cli-core",
+  "name": "@skydryft/gemini-cli-core",
   "version": "0.36.0-nightly.20260317.2f90b4653",
   "description": "Gemini CLI Core",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/google-gemini/gemini-cli.git"
+    "url": "git+https://github.com/skydryft/gemini-cli-gt.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "type": "module",
   "main": "dist/index.js",
@@ -101,7 +104,7 @@
     "node-pty": "^1.0.0"
   },
   "devDependencies": {
-    "@google/gemini-cli-test-utils": "file:../test-utils",
+    "@skydryft/gemini-cli-test-utils": "file:../test-utils",
     "@types/fast-levenshtein": "^0.0.4",
     "@types/js-yaml": "^4.0.9",
     "@types/json-stable-stringify": "^1.1.0",

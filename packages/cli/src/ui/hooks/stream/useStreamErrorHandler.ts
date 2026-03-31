@@ -8,12 +8,12 @@ import { useRef, useCallback } from 'react';
 import {
   DEFAULT_GEMINI_FLASH_MODEL,
   parseAndFormatApiError,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import type {
   Config,
   GeminiErrorEventValue,
   ThoughtSummary,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import { MessageType, type HistoryItemWithoutId } from '../../types.js';
 import type { UseHistoryManagerReturn } from '../useHistoryManager.js';
 

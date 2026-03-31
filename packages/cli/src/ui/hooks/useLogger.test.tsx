@@ -13,16 +13,16 @@ import {
   Logger,
   type Storage,
   type Config,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import { ConfigContext } from '../contexts/ConfigContext.js';
 import type React from 'react';
 
 let deferredInit: { resolve: (val?: unknown) => void };
 
 // Mock Logger
-vi.mock('@google/gemini-cli-core', async (importOriginal) => {
+vi.mock('@skydryft/gemini-cli-core', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import('@google/gemini-cli-core')>();
+    await importOriginal<typeof import('@skydryft/gemini-cli-core')>();
   return {
     ...actual,
     Logger: vi.fn().mockImplementation((id: string) => ({

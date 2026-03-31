@@ -6,7 +6,7 @@
 
 import { vi, beforeEach, afterEach } from 'vitest';
 import { format } from 'node:util';
-import { coreEvents } from '@google/gemini-cli-core';
+import { coreEvents } from '@skydryft/gemini-cli-core';
 import { themeManager } from './src/ui/themes/theme-manager.js';
 import { mockInkSpinner } from './src/test-utils/mockSpinner.js';
 

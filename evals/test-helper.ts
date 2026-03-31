@@ -9,16 +9,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execSync } from 'node:child_process';
-import { TestRig } from '@google/gemini-cli-test-utils';
+import { TestRig } from '@skydryft/gemini-cli-test-utils';
 import {
   createUnauthorizedToolError,
   parseAgentMarkdown,
   Storage,
   getProjectHash,
   SESSION_FILE_PREFIX,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 
-export * from '@google/gemini-cli-test-utils';
+export * from '@skydryft/gemini-cli-test-utils';
 
 // Indicates the consistency expectation for this test.
 // - ALWAYS_PASSES - Means that the test is expected to pass 100% of the time. These

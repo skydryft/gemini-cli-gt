@@ -11,7 +11,7 @@ import {
   PolicyIntegrityManager,
   type Config,
   type PolicyUpdateConfirmationRequest,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import { theme } from '../semantic-colors.js';
 import {
   RadioButtonSelect,

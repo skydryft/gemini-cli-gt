@@ -13,7 +13,7 @@ import {
   RELAUNCH_EXIT_CODE,
   _resetRelaunchStateForTesting,
 } from '../../utils/processUtils.js';
-import { type Config } from '@google/gemini-cli-core';
+import { type Config } from '@skydryft/gemini-cli-core';
 
 // Mocks
 vi.mock('../hooks/useKeypress.js', () => ({

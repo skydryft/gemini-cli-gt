@@ -14,7 +14,7 @@ import {
   logCliConfiguration,
   startupProfiler,
   debugLogger,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import { type LoadedSettings } from '../config/settings.js';
 import { performInitialAuth } from './auth.js';
 import { validateTheme } from './theme.js';

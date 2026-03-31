@@ -5,11 +5,11 @@
  */
 
 import { useCallback } from 'react';
-import { MessageSenderType } from '@google/gemini-cli-core';
+import { MessageSenderType } from '@skydryft/gemini-cli-core';
 import type {
   Config,
   ToolCallRequestInfo,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import type { PartListUnion } from '@google/genai';
 import { MessageType, type SlashCommandProcessorResult } from '../../types.js';
 import { isAtCommand, isSlashCommand } from '../../utils/commandUtils.js';

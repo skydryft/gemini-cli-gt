@@ -11,11 +11,11 @@ import {
   SessionEndReason,
   type Config,
   type HookSystem,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 
-vi.mock('@google/gemini-cli-core', async (importOriginal) => {
+vi.mock('@skydryft/gemini-cli-core', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import('@google/gemini-cli-core')>();
+    await importOriginal<typeof import('@skydryft/gemini-cli-core')>();
   return {
     ...actual,
     writeToStdout: vi.fn(),

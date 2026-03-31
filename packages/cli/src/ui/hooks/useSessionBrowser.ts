@@ -15,7 +15,7 @@ import {
   type Config,
   type ConversationRecord,
   type ResumedSessionData,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import {
   convertSessionToHistoryFormats,
   type SessionInfo,

@@ -12,7 +12,7 @@ import {
   tildeifyPath,
   getDisplayString,
   checkExhaustive,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import { ConsoleSummaryDisplay } from './ConsoleSummaryDisplay.js';
 import process from 'node:process';
 import { MemoryUsageDisplay } from './MemoryUsageDisplay.js';

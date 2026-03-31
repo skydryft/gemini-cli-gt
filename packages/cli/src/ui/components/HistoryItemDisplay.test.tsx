@@ -12,11 +12,11 @@ import {
   CoreToolCallStatus,
   type Config,
   type ToolExecuteConfirmationDetails,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import { ToolGroupMessage } from './messages/ToolGroupMessage.js';
 import { renderWithProviders } from '../../test-utils/render.js';
 import { createMockSettings } from '../../test-utils/settings.js';
-import { makeFakeConfig } from '@google/gemini-cli-core';
+import { makeFakeConfig } from '@skydryft/gemini-cli-core';
 
 // Mock child components
 vi.mock('./messages/ToolGroupMessage.js', () => ({

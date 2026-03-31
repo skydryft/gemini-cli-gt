@@ -18,7 +18,7 @@ import {
   isHeadlessMode,
   coreEvents,
   type HeadlessModeOptions,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import type { Settings } from './settings.js';
 import stripJsonComments from 'strip-json-comments';
 

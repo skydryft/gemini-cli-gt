@@ -44,7 +44,7 @@ import {
   coreEvents,
   debugLogger,
   type Config,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import {
   parseInputForHighlighting,
   parseSegmentsFromTokens,

@@ -41,7 +41,7 @@ import {
   shouldHideToolCall,
   UPDATE_TOPIC_TOOL_NAME,
   UPDATE_TOPIC_DISPLAY_NAME,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import type {
   Config,
   EditorType,
@@ -55,7 +55,7 @@ import type {
   ToolCallResponseInfo,
   GeminiErrorEventValue,
   RetryAttemptPayload,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import { type Part, type PartListUnion, FinishReason } from '@google/genai';
 import type {
   HistoryItem,

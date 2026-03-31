@@ -29,7 +29,7 @@ import type {
   AgentDefinition,
   FolderDiscoveryResults,
   PolicyUpdateConfirmationRequest,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import { type TransientMessageType } from '../../utils/events.js';
 import type { DOMElement } from 'ink';
 import type { SessionStatsState } from '../contexts/SessionContext.js';

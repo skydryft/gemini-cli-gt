@@ -9,7 +9,7 @@ import {
   listMemoryFiles,
   refreshMemory,
   showMemory,
-} from '@google/gemini-cli-core';
+} from '@skydryft/gemini-cli-core';
 import { MessageType } from '../types.js';
 import {
   CommandKind,

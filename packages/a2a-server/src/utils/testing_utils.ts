@@ -24,8 +24,8 @@ import {
   NoopSandboxManager,
   type ToolRegistry,
   type SandboxManager,
-} from '@google/gemini-cli-core';
-import { createMockMessageBus } from '@google/gemini-cli-core/src/test-utils/mock-message-bus.js';
+} from '@skydryft/gemini-cli-core';
+import { createMockMessageBus } from '@skydryft/gemini-cli-core/src/test-utils/mock-message-bus.js';
 import { expect, vi } from 'vitest';
 
 export function createMockConfig(

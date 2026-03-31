@@ -6,7 +6,7 @@
 
 import latestVersion from 'latest-version';
 import semver from 'semver';
-import { getPackageJson, debugLogger } from '@google/gemini-cli-core';
+import { getPackageJson, debugLogger } from '@skydryft/gemini-cli-core';
 import type { LoadedSettings } from '../../config/settings.js';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -92,7 +92,7 @@ export async function checkForUpdates(
       const latestUpdate = await latestVersion(name);
 
       if (latestUpdate && semver.gt(latestUpdate, currentVersion)) {
-        const message = `Gemini CLI update available! ${currentVersion} → ${latestUpdate}`;
+        const message = `Gemini CLI GT update available! ${currentVersion} → ${latestUpdate}`;
         const type = semver.diff(latestUpdate, currentVersion) || undefined;
         return {
           message,

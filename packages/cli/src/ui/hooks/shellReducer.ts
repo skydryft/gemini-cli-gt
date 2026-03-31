@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { AnsiOutput, CompletionBehavior } from '@google/gemini-cli-core';
+import type { AnsiOutput, CompletionBehavior } from '@skydryft/gemini-cli-core';
 
 export interface BackgroundTask {
   pid: number;

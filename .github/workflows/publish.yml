@@ -1,0 +1,53 @@
+name: Publish
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build & Publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://npm.pkg.github.com
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run bundle
+
+      # Smoke test
+      - run: node ./bundle/gemini.js --version
+
+      # Set dev version based on commit SHA to avoid conflicts
+      - name: Set dev version
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          BASE_VERSION=$(node -p "require('./package.json').version.split('-')[0]")
+          DEV_VERSION="${BASE_VERSION}-dev.${SHORT_SHA}"
+          echo "Publishing version: ${DEV_VERSION}"
+          npm version "${DEV_VERSION}" --no-git-tag-version --workspaces --include-workspace-root
+
+      # Publish core first (cli depends on it)
+      - name: Publish @skydryft/gemini-cli-core
+        run: npm publish --workspace packages/core --access restricted
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Publish CLI package
+      - name: Publish @skydryft/gemini-cli
+        run: npm publish --workspace packages/cli --access restricted
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
