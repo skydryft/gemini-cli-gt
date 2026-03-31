@@ -6,10 +6,7 @@
 
 import { useCallback } from 'react';
 import { MessageSenderType } from '@skydryft/gemini-cli-core';
-import type {
-  Config,
-  ToolCallRequestInfo,
-} from '@skydryft/gemini-cli-core';
+import type { Config, ToolCallRequestInfo } from '@skydryft/gemini-cli-core';
 import type { PartListUnion } from '@google/genai';
 import { MessageType, type SlashCommandProcessorResult } from '../../types.js';
 import { isAtCommand, isSlashCommand } from '../../utils/commandUtils.js';
@@ -29,9 +26,17 @@ export interface UseCommandRouterDeps {
   scheduleToolCalls: (
     requests: ToolCallRequestInfo[],
     signal: AbortSignal,
-  ) => Promise<void>;
+  ) => Promise<unknown>;
   settings: LoadedSettings;
-  logger: { logMessage: (sender: MessageSenderType, message: string) => Promise<void> } | undefined;
+  logger:
+    | {
+        logMessage: (
+          sender: MessageSenderType,
+          message: string,
+        ) => Promise<void>;
+      }
+    | null
+    | undefined;
   turnCancelledRef: React.MutableRefObject<boolean>;
 }
 

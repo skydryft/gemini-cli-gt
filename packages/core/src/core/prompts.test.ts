@@ -261,9 +261,9 @@ describe('Core System Prompt (prompts.ts)', () => {
   it('should use chatty system prompt for preview model', () => {
     vi.mocked(mockConfig.getActiveModel).mockReturnValue(PREVIEW_GEMINI_MODEL);
     const prompt = getCoreSystemPrompt(mockConfig);
-    expect(prompt).toContain('You are Gemini CLI, an interactive CLI agent'); // Check for core content
+    expect(prompt).toContain('You are Gemini CLI GT, an interactive CLI agent'); // Check for core content
     expect(prompt).toContain('- **User Hints:**');
-    expect(prompt).toContain('No Chitchat:');
+    expect(prompt).toContain('Concise & High-Signal:');
     expect(prompt).toMatchSnapshot();
   });
 
@@ -272,8 +272,8 @@ describe('Core System Prompt (prompts.ts)', () => {
       PREVIEW_GEMINI_FLASH_MODEL,
     );
     const prompt = getCoreSystemPrompt(mockConfig);
-    expect(prompt).toContain('You are Gemini CLI, an interactive CLI agent'); // Check for core content
-    expect(prompt).toContain('No Chitchat:');
+    expect(prompt).toContain('You are Gemini CLI GT, an interactive CLI agent'); // Check for core content
+    expect(prompt).toContain('Concise & High-Signal:');
     expect(prompt).toMatchSnapshot();
   });
 
@@ -284,7 +284,7 @@ describe('Core System Prompt (prompts.ts)', () => {
     expect(prompt).toContain('Distinguish between **Directives**');
     expect(prompt).toContain('and **Inquiries**');
     expect(prompt).toContain(
-      'Assume all requests are Inquiries unless they contain an explicit instruction to perform a task.',
+      'Assume all requests are Inquiries unless they contain an explicit instruction to act.',
     );
     expect(prompt).toMatchSnapshot();
   });
@@ -297,8 +297,8 @@ describe('Core System Prompt (prompts.ts)', () => {
     vi.mocked(mockConfig.getActiveModel).mockReturnValue(PREVIEW_GEMINI_MODEL);
     const prompt = getCoreSystemPrompt(mockConfig, userMemory);
     expect(prompt).not.toContain('---\n\n'); // Separator should not be present
-    expect(prompt).toContain('You are Gemini CLI, an interactive CLI agent'); // Check for core content
-    expect(prompt).toContain('No Chitchat:');
+    expect(prompt).toContain('You are Gemini CLI GT, an interactive CLI agent'); // Check for core content
+    expect(prompt).toContain('Concise & High-Signal:');
     expect(prompt).toMatchSnapshot(); // Use snapshot for base prompt structure
   });
 
@@ -308,10 +308,12 @@ describe('Core System Prompt (prompts.ts)', () => {
     const memory = 'This is custom user memory.\nBe extra polite.';
     const prompt = getCoreSystemPrompt(mockConfig, memory);
 
-    expect(prompt).toContain('# Contextual Instructions (GEMINI.md)');
+    expect(prompt).toContain(
+      '# Contextual Instructions (GEMINI.md, AGENTS.md)',
+    );
     expect(prompt).toContain('<loaded_context>');
     expect(prompt).toContain(memory);
-    expect(prompt).toContain('You are Gemini CLI, an interactive CLI agent'); // Ensure base prompt follows
+    expect(prompt).toContain('You are Gemini CLI GT, an interactive CLI agent'); // Ensure base prompt follows
     expect(prompt).toMatchSnapshot(); // Snapshot the combined prompt
   });
 
@@ -350,7 +352,7 @@ describe('Core System Prompt (prompts.ts)', () => {
     ['sandbox-exec', '# macOS Seatbelt', ['# Sandbox', '# Outside of Sandbox']],
     [
       undefined,
-      'You are Gemini CLI, an interactive CLI agent',
+      'You are Gemini CLI GT, an interactive CLI agent',
       ['# Sandbox', '# macOS Seatbelt'],
     ],
   ])(
@@ -395,14 +397,21 @@ describe('Core System Prompt (prompts.ts)', () => {
     expect(prompt).toMatchSnapshot(); // Use snapshot for base prompt structure
   });
 
-  it('should redact grep and glob from the system prompt when they are disabled', () => {
+  it('should redact grep and glob from the workflow section when they are disabled', () => {
     vi.mocked(mockConfig.getActiveModel).mockReturnValue(PREVIEW_GEMINI_MODEL);
     vi.mocked(mockConfig.toolRegistry.getAllToolNames).mockReturnValue([]);
     const prompt = getCoreSystemPrompt(mockConfig);
 
-    expect(prompt).not.toContain('`grep_search`');
-    expect(prompt).not.toContain('`glob`');
-    expect(prompt).toContain(
+    // When grep/glob are disabled, the Research workflow step should not
+    // reference them by name, falling back to generic search language.
+    // Note: Tool Routing Rules still reference them as guidance.
+    const workflowSection =
+      prompt
+        .split('# Primary Workflows')[1]
+        ?.split('# Operational Guidelines')[0] ?? '';
+    expect(workflowSection).not.toContain('`grep_search`');
+    expect(workflowSection).not.toContain('`glob`');
+    expect(workflowSection).toContain(
       'Use search tools extensively to understand file structures, existing code patterns, and conventions.',
     );
   });
@@ -566,10 +575,13 @@ describe('Core System Prompt (prompts.ts)', () => {
       expect(prompt).toContain('`read_file`');
       expect(prompt).toContain('`ask_user`');
 
-      // Should NOT include tools not in getAllTools()
-      expect(prompt).not.toContain('`google_web_search`');
-      expect(prompt).not.toContain('`list_directory`');
-      expect(prompt).not.toContain('`grep_search`');
+      // Should NOT include tools not in getAllTools() in the plan mode tool list
+      const planToolsSection =
+        prompt.split('<available_tools>')[1]?.split('</available_tools>')[0] ??
+        '';
+      expect(planToolsSection).not.toContain('`google_web_search`');
+      expect(planToolsSection).not.toContain('`list_directory`');
+      expect(planToolsSection).not.toContain('`grep_search`');
     });
 
     describe('Approved Plan in Plan Mode', () => {

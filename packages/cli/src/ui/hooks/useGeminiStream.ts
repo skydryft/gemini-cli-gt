@@ -53,7 +53,6 @@ import type {
   ThoughtSummary,
   ToolCallRequestInfo,
   ToolCallResponseInfo,
-  GeminiErrorEventValue,
   RetryAttemptPayload,
 } from '@skydryft/gemini-cli-core';
 import { type Part, type PartListUnion, FinishReason } from '@google/genai';
@@ -1480,6 +1479,9 @@ export const useGeminiStream = (
       maybeAddLowVerbosityFailureNote,
       settings.merged.billing?.overageStrategy,
       setIsResponding,
+      lowVerbosityFailureNoteShownRef,
+      suppressedToolErrorCountRef,
+      suppressedToolErrorNoteShownRef,
     ],
   );
 
@@ -1767,6 +1769,7 @@ export const useGeminiStream = (
       maybeAddSuppressedToolErrorNote,
       maybeAddLowVerbosityFailureNote,
       setIsResponding,
+      suppressedToolErrorCountRef,
     ],
   );
 
