@@ -193,6 +193,7 @@ describe('ChatCompressionService', () => {
         getProjectTempDir: vi.fn().mockReturnValue(testTempDir),
       },
       getApprovedPlanPath: vi.fn().mockReturnValue('/path/to/plan.md'),
+      getCompressionPreserveRatio: vi.fn().mockReturnValue(undefined),
     } as unknown as Config;
 
     vi.mocked(getInitialChatHistory).mockImplementation(
