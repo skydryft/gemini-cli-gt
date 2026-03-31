@@ -612,7 +612,14 @@
         "compressionThreshold": {
           "title": "Context Compression Threshold",
           "description": "The fraction of context usage at which to trigger context compression (e.g. 0.2, 0.3).",
-          "markdownDescription": "The fraction of context usage at which to trigger context compression (e.g. 0.2, 0.3).\n\n- Category: `Model`\n- Requires restart: `yes`\n- Default: `0.5`",
+          "markdownDescription": "The fraction of context usage at which to trigger context compression (e.g. 0.2, 0.3).\n\n- Category: `Model`\n- Requires restart: `yes`\n- Default: `0.7`",
+          "default": 0.7,
+          "type": "number"
+        },
+        "compressionPreserveRatio": {
+          "title": "Context Compression Preserve Ratio",
+          "description": "The fraction of recent chat history to preserve during compression (e.g. 0.3, 0.5).",
+          "markdownDescription": "The fraction of recent chat history to preserve during compression (e.g. 0.3, 0.5).\n\n- Category: `Model`\n- Requires restart: `yes`\n- Default: `0.5`",
           "default": 0.5,
           "type": "number"
         },
@@ -622,6 +629,27 @@
           "markdownDescription": "Disable automatic detection and prevention of infinite loops.\n\n- Category: `Model`\n- Requires restart: `yes`\n- Default: `false`",
           "default": false,
           "type": "boolean"
+        },
+        "loopDetectionToolCallThreshold": {
+          "title": "Loop Detection Tool Call Threshold",
+          "description": "Number of identical consecutive tool calls before detecting a loop.",
+          "markdownDescription": "Number of identical consecutive tool calls before detecting a loop.\n\n- Category: `Model`\n- Requires restart: `yes`\n- Default: `5`",
+          "default": 5,
+          "type": "integer"
+        },
+        "loopDetectionContentThreshold": {
+          "title": "Loop Detection Content Threshold",
+          "description": "Number of identical content chunks before detecting a content loop.",
+          "markdownDescription": "Number of identical content chunks before detecting a content loop.\n\n- Category: `Model`\n- Requires restart: `yes`\n- Default: `10`",
+          "default": 10,
+          "type": "integer"
+        },
+        "loopDetectionLlmCheckAfterTurns": {
+          "title": "Loop Detection LLM Check After Turns",
+          "description": "Number of turns before activating LLM-based loop detection.",
+          "markdownDescription": "Number of turns before activating LLM-based loop detection.\n\n- Category: `Model`\n- Requires restart: `yes`\n- Default: `30`",
+          "default": 30,
+          "type": "integer"
         },
         "skipNextSpeakerCheck": {
           "title": "Skip Next Speaker Check",

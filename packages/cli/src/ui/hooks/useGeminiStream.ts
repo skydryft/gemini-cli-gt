@@ -9,7 +9,6 @@ import {
   GeminiEventType as ServerGeminiEventType,
   getErrorMessage,
   isNodeError,
-  MessageSenderType,
   logUserPrompt,
   GitService,
   UnauthorizedError,
@@ -74,9 +73,7 @@ import {
   mapCoreStatusToDisplayStatus,
   ToolCallStatus,
 } from '../types.js';
-import { isAtCommand, isSlashCommand } from '../utils/commandUtils.js';
 import { useExecutionLifecycle } from './useExecutionLifecycle.js';
-import { handleAtCommand } from './atCommandProcessor.js';
 import { findLastSafeSplitPoint } from '../utils/markdownUtilities.js';
 import { getInlineThinkingMode } from '../utils/inlineThinkingMode.js';
 import { useStateAndRef } from './useStateAndRef.js';
@@ -99,6 +96,8 @@ import path from 'node:path';
 import { useSessionStats } from '../contexts/SessionContext.js';
 import { useKeypress } from './useKeypress.js';
 import type { LoadedSettings } from '../../config/settings.js';
+import { useStreamErrorHandler } from './stream/useStreamErrorHandler.js';
+import { useCommandRouter } from './stream/useCommandRouter.js';
 
 type ToolResponseWithParts = ToolCallResponseInfo & {
   llmContent?: PartListUnion;
@@ -118,11 +117,6 @@ enum StreamProcessingStatus {
   UserCancelled,
   Error,
 }
-
-const SUPPRESSED_TOOL_ERRORS_NOTE =
-  'Some internal tool attempts failed before this final error. Press F12 for diagnostics, or run /settings and change "Error Verbosity" to full for details.';
-const LOW_VERBOSITY_FAILURE_NOTE =
-  'This request failed. Press F12 for diagnostics, or run /settings and change "Error Verbosity" to full for full details.';
 
 function getBackgroundedToolInfo(
   toolCall: TrackedCompletedToolCall | TrackedCancelledToolCall,
@@ -237,9 +231,6 @@ export const useGeminiStream = (
     null,
   );
   const isLowErrorVerbosity = settings.merged.ui?.errorVerbosity !== 'full';
-  const suppressedToolErrorCountRef = useRef(0);
-  const suppressedToolErrorNoteShownRef = useRef(false);
-  const lowVerbosityFailureNoteShownRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const turnCancelledRef = useRef(false);
   const activeQueryIdRef = useRef<string | null>(null);
@@ -259,6 +250,23 @@ export const useGeminiStream = (
     useStateAndRef<ThoughtSummary | null>(null);
   const [pendingHistoryItem, pendingHistoryItemRef, setPendingHistoryItem] =
     useStateAndRef<HistoryItemWithoutId | null>(null);
+
+  // Extracted error handling sub-hook
+  const {
+    handleErrorEvent,
+    maybeAddSuppressedToolErrorNote,
+    maybeAddLowVerbosityFailureNote,
+    suppressedToolErrorCountRef,
+    suppressedToolErrorNoteShownRef,
+    lowVerbosityFailureNoteShownRef,
+  } = useStreamErrorHandler({
+    config,
+    addItem,
+    isLowErrorVerbosity,
+    pendingHistoryItemRef,
+    setPendingHistoryItem,
+    setThought,
+  });
 
   const [lastGeminiActivityTime, setLastGeminiActivityTime] =
     useState<number>(0);
@@ -685,54 +693,6 @@ export const useGeminiStream = (
     }
   }, [isResponding]);
 
-  const maybeAddSuppressedToolErrorNote = useCallback(
-    (userMessageTimestamp?: number) => {
-      if (!isLowErrorVerbosity) {
-        return;
-      }
-      if (suppressedToolErrorCountRef.current === 0) {
-        return;
-      }
-      if (suppressedToolErrorNoteShownRef.current) {
-        return;
-      }
-
-      addItem(
-        {
-          type: MessageType.INFO,
-          text: SUPPRESSED_TOOL_ERRORS_NOTE,
-        },
-        userMessageTimestamp,
-      );
-      suppressedToolErrorNoteShownRef.current = true;
-    },
-    [addItem, isLowErrorVerbosity],
-  );
-
-  const maybeAddLowVerbosityFailureNote = useCallback(
-    (userMessageTimestamp?: number) => {
-      if (!isLowErrorVerbosity || config.getDebugMode()) {
-        return;
-      }
-      if (
-        lowVerbosityFailureNoteShownRef.current ||
-        suppressedToolErrorNoteShownRef.current
-      ) {
-        return;
-      }
-
-      addItem(
-        {
-          type: MessageType.INFO,
-          text: LOW_VERBOSITY_FAILURE_NOTE,
-        },
-        userMessageTimestamp,
-      );
-      lowVerbosityFailureNoteShownRef.current = true;
-    },
-    [addItem, config, isLowErrorVerbosity],
-  );
-
   const cancelOngoingRequest = useCallback(() => {
     if (
       streamingState !== StreamingState.Responding &&
@@ -834,139 +794,19 @@ export const useGeminiStream = (
     },
   );
 
-  const prepareQueryForGemini = useCallback(
-    async (
-      query: PartListUnion,
-      userMessageTimestamp: number,
-      abortSignal: AbortSignal,
-      prompt_id: string,
-    ): Promise<{
-      queryToSend: PartListUnion | null;
-      shouldProceed: boolean;
-    }> => {
-      if (turnCancelledRef.current) {
-        return { queryToSend: null, shouldProceed: false };
-      }
-      if (typeof query === 'string' && query.trim().length === 0) {
-        return { queryToSend: null, shouldProceed: false };
-      }
-
-      let localQueryToSendToGemini: PartListUnion | null = null;
-
-      if (typeof query === 'string') {
-        const trimmedQuery = query.trim();
-        await logger?.logMessage(MessageSenderType.USER, trimmedQuery);
-
-        if (!shellModeActive) {
-          // Handle UI-only commands first
-          const slashCommandResult = isSlashCommand(trimmedQuery)
-            ? await handleSlashCommand(trimmedQuery)
-            : false;
-
-          if (slashCommandResult) {
-            switch (slashCommandResult.type) {
-              case 'schedule_tool': {
-                const { toolName, toolArgs, postSubmitPrompt } =
-                  slashCommandResult;
-                const toolCallRequest: ToolCallRequestInfo = {
-                  callId: `${toolName}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-                  name: toolName,
-                  args: toolArgs,
-                  isClientInitiated: true,
-                  prompt_id,
-                };
-                await scheduleToolCalls([toolCallRequest], abortSignal);
-
-                if (postSubmitPrompt) {
-                  localQueryToSendToGemini = postSubmitPrompt;
-                  return {
-                    queryToSend: localQueryToSendToGemini,
-                    shouldProceed: true,
-                  };
-                }
-
-                return { queryToSend: null, shouldProceed: false };
-              }
-              case 'submit_prompt': {
-                localQueryToSendToGemini = slashCommandResult.content;
-
-                return {
-                  queryToSend: localQueryToSendToGemini,
-                  shouldProceed: true,
-                };
-              }
-              case 'handled': {
-                return { queryToSend: null, shouldProceed: false };
-              }
-              default: {
-                const unreachable: never = slashCommandResult;
-                throw new Error(
-                  `Unhandled slash command result type: ${unreachable}`,
-                );
-              }
-            }
-          }
-        }
-
-        if (shellModeActive && handleShellCommand(trimmedQuery, abortSignal)) {
-          return { queryToSend: null, shouldProceed: false };
-        }
-
-        // Handle @-commands (which might involve tool calls)
-        if (isAtCommand(trimmedQuery)) {
-          // Add user's turn before @ command processing for correct UI ordering.
-          addItem(
-            { type: MessageType.USER, text: trimmedQuery },
-            userMessageTimestamp,
-          );
-
-          const atCommandResult = await handleAtCommand({
-            query: trimmedQuery,
-            config,
-            addItem,
-            onDebugMessage,
-            messageId: userMessageTimestamp,
-            signal: abortSignal,
-            escapePastedAtSymbols: settings.merged.ui?.escapePastedAtSymbols,
-          });
-          if (atCommandResult.error) {
-            onDebugMessage(atCommandResult.error);
-            return { queryToSend: null, shouldProceed: false };
-          }
-          localQueryToSendToGemini = atCommandResult.processedQuery;
-        } else {
-          // Normal query for Gemini
-          addItem(
-            { type: MessageType.USER, text: trimmedQuery },
-            userMessageTimestamp,
-          );
-          localQueryToSendToGemini = trimmedQuery;
-        }
-      } else {
-        // It's a function response (PartListUnion that isn't a string)
-        localQueryToSendToGemini = query;
-      }
-
-      if (localQueryToSendToGemini === null) {
-        onDebugMessage(
-          'Query processing resulted in null, not sending to Gemini.',
-        );
-        return { queryToSend: null, shouldProceed: false };
-      }
-      return { queryToSend: localQueryToSendToGemini, shouldProceed: true };
-    },
-    [
-      config,
-      addItem,
-      onDebugMessage,
-      handleShellCommand,
-      handleSlashCommand,
-      logger,
-      shellModeActive,
-      scheduleToolCalls,
-      settings,
-    ],
-  );
+  // Command routing extracted to useCommandRouter sub-hook
+  const { routeInput: prepareQueryForGemini } = useCommandRouter({
+    config,
+    addItem,
+    onDebugMessage,
+    handleSlashCommand,
+    handleShellCommand,
+    shellModeActive,
+    scheduleToolCalls,
+    settings,
+    logger,
+    turnCancelledRef,
+  });
 
   // --- Stream Event Handlers ---
 
@@ -1091,39 +931,7 @@ export const useGeminiStream = (
     ],
   );
 
-  const handleErrorEvent = useCallback(
-    (eventValue: GeminiErrorEventValue, userMessageTimestamp: number) => {
-      if (pendingHistoryItemRef.current) {
-        addItem(pendingHistoryItemRef.current, userMessageTimestamp);
-        setPendingHistoryItem(null);
-      }
-      maybeAddSuppressedToolErrorNote(userMessageTimestamp);
-      addItem(
-        {
-          type: MessageType.ERROR,
-          text: parseAndFormatApiError(
-            eventValue.error,
-            config.getContentGeneratorConfig()?.authType,
-            undefined,
-            config.getModel(),
-            DEFAULT_GEMINI_FLASH_MODEL,
-          ),
-        },
-        userMessageTimestamp,
-      );
-      maybeAddLowVerbosityFailureNote(userMessageTimestamp);
-      setThought(null); // Reset thought when there's an error
-    },
-    [
-      addItem,
-      pendingHistoryItemRef,
-      setPendingHistoryItem,
-      config,
-      setThought,
-      maybeAddSuppressedToolErrorNote,
-      maybeAddLowVerbosityFailureNote,
-    ],
-  );
+  // handleErrorEvent is now provided by useStreamErrorHandler
 
   const handleCitationEvent = useCallback(
     (text: string, userMessageTimestamp: number) => {

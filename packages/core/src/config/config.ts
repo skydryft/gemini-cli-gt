@@ -614,6 +614,9 @@ export interface ConfigParameters {
   bugCommand?: BugCommandSettings;
   model: string;
   disableLoopDetection?: boolean;
+  loopDetectionToolCallThreshold?: number;
+  loopDetectionContentThreshold?: number;
+  loopDetectionLlmCheckAfterTurns?: number;
   maxSessionTurns?: number;
   acpMode?: boolean;
   listSessions?: boolean;
@@ -636,6 +639,7 @@ export interface ConfigParameters {
   importFormat?: 'tree' | 'flat';
   discoveryMaxDirs?: number;
   compressionThreshold?: number;
+  compressionPreserveRatio?: number;
   interactive?: boolean;
   trustedFolder?: boolean;
   useBackgroundColor?: boolean;
@@ -788,6 +792,9 @@ export class Config implements McpContext, AgentLoopContext {
   private readonly bugCommand: BugCommandSettings | undefined;
   private model: string;
   private readonly disableLoopDetection: boolean;
+  private readonly loopDetectionToolCallThreshold: number | undefined;
+  private readonly loopDetectionContentThreshold: number | undefined;
+  private readonly loopDetectionLlmCheckAfterTurns: number | undefined;
   // null = unknown (quota not fetched); true = has access; false = definitively no access
   private hasAccessToPreviewModel: boolean | null = null;
   private readonly noBrowser: boolean;
@@ -840,6 +847,7 @@ export class Config implements McpContext, AgentLoopContext {
   private readonly importFormat: 'tree' | 'flat';
   private readonly discoveryMaxDirs: number;
   private readonly compressionThreshold: number | undefined;
+  private readonly compressionPreserveRatio: number | undefined;
   /** Public for testing only */
   readonly interactive: boolean;
   private readonly ptyInfo: string;
@@ -1073,6 +1081,12 @@ export class Config implements McpContext, AgentLoopContext {
     this.bugCommand = params.bugCommand;
     this.model = params.model;
     this.disableLoopDetection = params.disableLoopDetection ?? false;
+    this.loopDetectionToolCallThreshold =
+      params.loopDetectionToolCallThreshold;
+    this.loopDetectionContentThreshold =
+      params.loopDetectionContentThreshold;
+    this.loopDetectionLlmCheckAfterTurns =
+      params.loopDetectionLlmCheckAfterTurns;
     this._activeModel = params.model;
     this.enableAgents = params.enableAgents ?? true;
     this.agents = params.agents ?? {};
@@ -1181,6 +1195,7 @@ export class Config implements McpContext, AgentLoopContext {
     this.importFormat = params.importFormat ?? 'tree';
     this.discoveryMaxDirs = params.discoveryMaxDirs ?? 200;
     this.compressionThreshold = params.compressionThreshold;
+    this.compressionPreserveRatio = params.compressionPreserveRatio;
     this.interactive = params.interactive ?? false;
     this.ptyInfo = params.ptyInfo ?? 'child_process';
     this.trustedFolder = params.trustedFolder;
@@ -1741,6 +1756,18 @@ export class Config implements McpContext, AgentLoopContext {
 
   getDisableLoopDetection(): boolean {
     return this.disableLoopDetection ?? false;
+  }
+
+  getLoopDetectionToolCallThreshold(): number | undefined {
+    return this.loopDetectionToolCallThreshold;
+  }
+
+  getLoopDetectionContentThreshold(): number | undefined {
+    return this.loopDetectionContentThreshold;
+  }
+
+  getLoopDetectionLlmCheckAfterTurns(): number | undefined {
+    return this.loopDetectionLlmCheckAfterTurns;
   }
 
   setModel(newModel: string, isTemporary: boolean = true): void {
@@ -2913,6 +2940,10 @@ export class Config implements McpContext, AgentLoopContext {
       return undefined;
     }
     return remoteThreshold;
+  }
+
+  getCompressionPreserveRatio(): number | undefined {
+    return this.compressionPreserveRatio;
   }
 
   async getUserCaching(): Promise<boolean | undefined> {

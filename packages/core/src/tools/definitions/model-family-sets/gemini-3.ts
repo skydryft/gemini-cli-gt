@@ -710,7 +710,7 @@ The agent did not use the todo list because this task could be completed by a ti
   enter_plan_mode: {
     name: ENTER_PLAN_MODE_TOOL_NAME,
     description:
-      'Switch to Plan Mode to safely research, design, and plan complex changes using read-only tools.',
+      'Switch to Plan Mode to safely research, design, and plan complex changes. You MUST use this tool (not shell) when: (1) the task requires 3+ steps, (2) you need to explore the codebase before making changes, (3) the user asks you to plan or think through an approach, (4) you are unsure how to proceed. Plan Mode gives you read-only access to explore safely before committing to changes.',
     parametersJsonSchema: {
       type: 'object',
       properties: {

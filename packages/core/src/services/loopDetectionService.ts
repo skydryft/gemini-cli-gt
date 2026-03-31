@@ -149,6 +149,29 @@ export class LoopDetectionService {
   private inCodeBlock = false;
 
   private lastLoopType?: LoopType;
+
+  // Semantic repetition tracking (word salad detection)
+  private responseTrigramSets: Set<string>[] = [];
+  private consecutiveHighSimilarityCount = 0;
+  private static readonly SEMANTIC_SIMILARITY_THRESHOLD = 0.85;
+  private static readonly SEMANTIC_REPETITION_CONSECUTIVE_THRESHOLD = 5;
+  private static readonly SEMANTIC_WINDOW_SIZE = 10;
+
+  // Thought spiral tracking
+  private static readonly THOUGHT_SPIRAL_MARKERS = [
+    'wait',
+    'actually',
+    'let me reconsider',
+    'on second thought',
+    'hmm',
+    'no,',
+    'let me rethink',
+    'hold on',
+  ];
+  private consecutiveSpiralTurns = 0;
+  private lastTurnHadToolCall = false;
+  private static readonly THOUGHT_SPIRAL_THRESHOLD = 5;
+
   // LLM loop track tracking
   private turnsInCurrentPrompt = 0;
   private llmCheckInterval = DEFAULT_LLM_CHECK_INTERVAL;
@@ -159,6 +182,27 @@ export class LoopDetectionService {
 
   constructor(context: AgentLoopContext) {
     this.context = context;
+  }
+
+  private get toolCallLoopThreshold(): number {
+    return (
+      this.context.config.getLoopDetectionToolCallThreshold() ??
+      TOOL_CALL_LOOP_THRESHOLD
+    );
+  }
+
+  private get contentLoopThreshold(): number {
+    return (
+      this.context.config.getLoopDetectionContentThreshold() ??
+      CONTENT_LOOP_THRESHOLD
+    );
+  }
+
+  private get llmCheckAfterTurns(): number {
+    return (
+      this.context.config.getLoopDetectionLlmCheckAfterTurns() ??
+      LLM_CHECK_AFTER_TURNS
+    );
   }
 
   /**
@@ -201,34 +245,51 @@ export class LoopDetectionService {
     let isLoop = false;
     let detail: string | undefined;
 
+    let loopType: LoopType | undefined;
+
     switch (event.type) {
       case GeminiEventType.ToolCallRequest:
         // content chanting only happens in one single stream, reset if there
         // is a tool call in between
         this.resetContentTracking();
+        this.lastTurnHadToolCall = true;
         isLoop = this.checkToolCallLoop(event.value);
         if (isLoop) {
           detail = `Repeated tool call: ${event.value.name} with arguments ${JSON.stringify(event.value.args)}`;
+          loopType = LoopType.CONSECUTIVE_IDENTICAL_TOOL_CALLS;
         }
         break;
-      case GeminiEventType.Content:
+      case GeminiEventType.Content: {
         isLoop = this.checkContentLoop(event.value);
         if (isLoop) {
           detail = `Repeating content detected: "${this.streamContentHistory.substring(Math.max(0, this.lastContentIndex - 20), this.lastContentIndex + CONTENT_CHUNK_SIZE).trim()}..."`;
+          loopType = LoopType.CONTENT_CHANTING_LOOP;
+        }
+        // Check for thought spiral patterns
+        if (!isLoop && this.checkThoughtSpiral(event.value)) {
+          isLoop = true;
+          detail =
+            'Thought spiral detected: model is repeatedly second-guessing itself without making progress.';
+          loopType = LoopType.THOUGHT_SPIRAL_LOOP;
+        }
+        // Check for semantic repetition (word salad)
+        if (!isLoop && this.checkSemanticRepetition(event.value)) {
+          isLoop = true;
+          detail =
+            'Semantic repetition detected: model is rephrasing the same content without making progress.';
+          loopType = LoopType.SEMANTIC_REPETITION_LOOP;
         }
         break;
+      }
       default:
         break;
     }
 
-    if (isLoop) {
+    if (isLoop && loopType) {
       this.loopDetected = true;
       this.detectedCount++;
       this.lastLoopDetail = detail;
-      this.lastLoopType =
-        event.type === GeminiEventType.ToolCallRequest
-          ? LoopType.CONSECUTIVE_IDENTICAL_TOOL_CALLS
-          : LoopType.CONTENT_CHANTING_LOOP;
+      this.lastLoopType = loopType;
 
       logLoopDetected(
         this.context.config,
@@ -276,7 +337,7 @@ export class LoopDetectionService {
     this.turnsInCurrentPrompt++;
 
     if (
-      this.turnsInCurrentPrompt >= LLM_CHECK_AFTER_TURNS &&
+      this.turnsInCurrentPrompt >= this.llmCheckAfterTurns &&
       this.turnsInCurrentPrompt - this.lastCheckTurn >= this.llmCheckInterval
     ) {
       this.lastCheckTurn = this.turnsInCurrentPrompt;
@@ -319,7 +380,7 @@ export class LoopDetectionService {
       this.lastToolCallKey = key;
       this.toolCallRepetitionCount = 1;
     }
-    if (this.toolCallRepetitionCount >= TOOL_CALL_LOOP_THRESHOLD) {
+    if (this.toolCallRepetitionCount >= this.toolCallLoopThreshold) {
       return true;
     }
     return false;
@@ -467,15 +528,15 @@ export class LoopDetectionService {
 
     existingIndices.push(this.lastContentIndex);
 
-    if (existingIndices.length < CONTENT_LOOP_THRESHOLD) {
+    if (existingIndices.length < this.contentLoopThreshold) {
       return false;
     }
 
     // Analyze the most recent occurrences to see if they're clustered closely together
-    const recentIndices = existingIndices.slice(-CONTENT_LOOP_THRESHOLD);
+    const recentIndices = existingIndices.slice(-this.contentLoopThreshold);
     const totalDistance =
       recentIndices[recentIndices.length - 1] - recentIndices[0];
-    const averageDistance = totalDistance / (CONTENT_LOOP_THRESHOLD - 1);
+    const averageDistance = totalDistance / (this.contentLoopThreshold - 1);
     const maxAllowedDistance = CONTENT_CHUNK_SIZE * 5;
 
     if (averageDistance > maxAllowedDistance) {
@@ -496,8 +557,8 @@ export class LoopDetectionService {
 
     // If the periods are mostly unique, it's a list of distinct items with a shared prefix.
     // A true loop will have a small number of unique periods (usually 1, sometimes 2 or 3).
-    // We use Math.floor(CONTENT_LOOP_THRESHOLD / 2) as a safe threshold.
-    if (periods.size > Math.floor(CONTENT_LOOP_THRESHOLD / 2)) {
+    // We use Math.floor(contentLoopThreshold / 2) as a safe threshold.
+    if (periods.size > Math.floor(this.contentLoopThreshold / 2)) {
       return false;
     }
 
@@ -716,6 +777,100 @@ export class LoopDetectionService {
   }
 
   /**
+   * Extracts word-level trigrams from text for semantic similarity comparison.
+   * Used to detect "word salad" loops where the model rephrases the same
+   * idea with synonyms, bypassing exact-match detection.
+   */
+  private extractTrigrams(text: string): Set<string> {
+    const words = text
+      .toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .split(/\s+/)
+      .filter((w) => w.length > 0);
+    const trigrams = new Set<string>();
+    for (let i = 0; i <= words.length - 3; i++) {
+      trigrams.add(`${words[i]} ${words[i + 1]} ${words[i + 2]}`);
+    }
+    return trigrams;
+  }
+
+  /**
+   * Computes Jaccard similarity between two sets.
+   */
+  private jaccardSimilarity(a: Set<string>, b: Set<string>): number {
+    if (a.size === 0 && b.size === 0) return 0;
+    let intersection = 0;
+    for (const item of a) {
+      if (b.has(item)) intersection++;
+    }
+    const union = a.size + b.size - intersection;
+    return union === 0 ? 0 : intersection / union;
+  }
+
+  /**
+   * Checks for semantic repetition by comparing word-level trigram overlap
+   * between consecutive model responses. Catches "word salad" loops where
+   * the model rephrases the same content with different words.
+   */
+  checkSemanticRepetition(responseText: string): boolean {
+    if (responseText.trim().length < 50) return false;
+
+    const currentTrigrams = this.extractTrigrams(responseText);
+    if (currentTrigrams.size < 3) return false;
+
+    if (this.responseTrigramSets.length > 0) {
+      const lastTrigrams =
+        this.responseTrigramSets[this.responseTrigramSets.length - 1];
+      const similarity = this.jaccardSimilarity(currentTrigrams, lastTrigrams);
+
+      if (similarity >= LoopDetectionService.SEMANTIC_SIMILARITY_THRESHOLD) {
+        this.consecutiveHighSimilarityCount++;
+      } else {
+        this.consecutiveHighSimilarityCount = 0;
+      }
+    }
+
+    this.responseTrigramSets.push(currentTrigrams);
+    if (
+      this.responseTrigramSets.length >
+      LoopDetectionService.SEMANTIC_WINDOW_SIZE
+    ) {
+      this.responseTrigramSets.shift();
+    }
+
+    return (
+      this.consecutiveHighSimilarityCount >=
+      LoopDetectionService.SEMANTIC_REPETITION_CONSECUTIVE_THRESHOLD
+    );
+  }
+
+  /**
+   * Checks for thought spiral patterns where the model repeatedly
+   * second-guesses itself without making progress. Detects markers like
+   * "Wait", "Actually", "Let me reconsider" in consecutive turns
+   * without any tool calls in between.
+   */
+  checkThoughtSpiral(responseText: string): boolean {
+    const lowerText = responseText.toLowerCase().trim();
+    const hasMarker = LoopDetectionService.THOUGHT_SPIRAL_MARKERS.some(
+      (marker) => lowerText.startsWith(marker) || lowerText.includes(marker),
+    );
+
+    if (hasMarker && !this.lastTurnHadToolCall) {
+      this.consecutiveSpiralTurns++;
+    } else {
+      this.consecutiveSpiralTurns = 0;
+    }
+
+    this.lastTurnHadToolCall = false;
+
+    return (
+      this.consecutiveSpiralTurns >=
+      LoopDetectionService.THOUGHT_SPIRAL_THRESHOLD
+    );
+  }
+
+  /**
    * Resets all loop detection state.
    */
   reset(promptId: string, userPrompt?: string): void {
@@ -724,6 +879,8 @@ export class LoopDetectionService {
     this.resetToolCallCount();
     this.resetContentTracking();
     this.resetLlmCheckTracking();
+    this.resetSemanticTracking();
+    this.resetSpiralTracking();
     this.loopDetected = false;
     this.detectedCount = 0;
     this.lastLoopDetail = undefined;
@@ -755,5 +912,15 @@ export class LoopDetectionService {
     this.turnsInCurrentPrompt = 0;
     this.llmCheckInterval = DEFAULT_LLM_CHECK_INTERVAL;
     this.lastCheckTurn = 0;
+  }
+
+  private resetSemanticTracking(): void {
+    this.responseTrigramSets = [];
+    this.consecutiveHighSimilarityCount = 0;
+  }
+
+  private resetSpiralTracking(): void {
+    this.consecutiveSpiralTurns = 0;
+    this.lastTurnHadToolCall = false;
   }
 }
