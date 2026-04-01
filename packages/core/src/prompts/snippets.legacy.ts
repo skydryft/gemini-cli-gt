@@ -68,6 +68,7 @@ export interface OperationalGuidelinesOptions {
   enableShellEfficiency: boolean;
   interactiveShellEnabled: boolean;
   memoryManagerEnabled: boolean;
+  shellOnlyMode?: boolean;
 }
 
 export type SandboxMode = 'macos-seatbelt' | 'generic' | 'outside';
@@ -281,7 +282,24 @@ ${shellEfficiencyGuidelines(options.enableShellEfficiency)}
 - **Explain Critical Commands:** Before executing commands with '${SHELL_TOOL_NAME}' that modify the file system, codebase, or system state, you *must* provide a brief explanation of the command's purpose and potential impact. Prioritize user understanding and safety. You should not ask permission to use the tool; the user will be presented with a confirmation dialogue upon use (you do not need to tell them this).
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
-## Tool Usage
+${
+  options.shellOnlyMode
+    ? `## Shell Playbook
+You operate primarily through '${SHELL_TOOL_NAME}'. Use standard Unix commands for all file operations:
+- **Search file contents:** \`grep -rn "pattern" .\`, \`rg "pattern"\`, or \`git grep "pattern"\`
+- **Find files by name/pattern:** \`find . -name "pattern" -type f\`, \`fd "pattern"\`, or \`git ls-files "pattern"\`
+- **Read file contents:** \`cat path\`, \`head -n 50 path\`, \`tail -n 20 path\`, or \`sed -n '10,30p' path\`
+- **Edit files:** \`sed -i 's/old/new/g' path\` for surgical edits, or \`cat << 'EOF' > path\` for full file writes
+- **Create files:** \`mkdir -p dir && cat << 'EOF' > dir/file\` (use quoted heredoc delimiter to prevent variable expansion)
+
+### Guardrails
+- Always use \`git ls-files\` or \`--exclude-dir={node_modules,.git,dist}\` when searching to skip ignored paths
+- Before overwriting a file, verify the target path is correct
+- For multi-line edits, prefer writing the complete file with heredoc over chained sed commands
+
+`
+    : ''
+}## Tool Usage
 - **Parallelism:** Execute multiple independent tool calls in parallel when feasible (i.e. searching the codebase).
 - **Command Execution:** Use the '${SHELL_TOOL_NAME}' tool for running shell commands, remembering the safety rule to explain modifying commands first.${toolUsageInteractive(
     options.interactive,

@@ -26,6 +26,8 @@ import {
   ENTER_PLAN_MODE_TOOL_NAME,
   GLOB_TOOL_NAME,
   GREP_TOOL_NAME,
+  SHELL_TOOL_NAME,
+  EDIT_TOOL_NAME,
 } from '../tools/tool-names.js';
 import { resolveModel, supportsModernFeatures } from '../config/models.js';
 import { DiscoveredMCPTool } from '../tools/mcp-tool.js';
@@ -57,6 +59,15 @@ export class PromptProvider {
     const skills = context.config.getSkillManager().getSkills();
     const toolNames = context.toolRegistry.getAllToolNames();
     const enabledToolNames = new Set(toolNames);
+
+    // Shell-only mode: when specialized tools are absent but shell is present,
+    // swap prompt coaching from "use dedicated tools" to "use bash commands".
+    const isShellOnlyMode =
+      enabledToolNames.has(SHELL_TOOL_NAME) &&
+      !enabledToolNames.has(GREP_TOOL_NAME) &&
+      !enabledToolNames.has(GLOB_TOOL_NAME) &&
+      !enabledToolNames.has(READ_FILE_TOOL_NAME) &&
+      !enabledToolNames.has(EDIT_TOOL_NAME);
 
     const approvedPlanPath = context.config.getApprovedPlanPath();
 
@@ -170,6 +181,7 @@ export class PromptProvider {
             taskTracker: context.config.isTrackerEnabled(),
             topicUpdateNarration:
               context.config.isTopicUpdateNarrationEnabled(),
+            shellOnlyMode: isShellOnlyMode,
           }),
           !isPlanMode,
         ),
@@ -194,6 +206,7 @@ export class PromptProvider {
             topicUpdateNarration:
               context.config.isTopicUpdateNarrationEnabled(),
             memoryManagerEnabled: context.config.isMemoryManagerEnabled(),
+            shellOnlyMode: isShellOnlyMode,
           }),
         ),
         sandbox: this.withSection('sandbox', () => ({

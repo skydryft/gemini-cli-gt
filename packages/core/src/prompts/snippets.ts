@@ -74,6 +74,7 @@ export interface PrimaryWorkflowsOptions {
   approvedPlan?: { path: string };
   taskTracker?: boolean;
   topicUpdateNarration: boolean;
+  shellOnlyMode?: boolean;
 }
 
 export interface OperationalGuidelinesOptions {
@@ -81,6 +82,7 @@ export interface OperationalGuidelinesOptions {
   interactiveShellEnabled: boolean;
   topicUpdateNarration: boolean;
   memoryManagerEnabled: boolean;
+  shellOnlyMode?: boolean;
 }
 
 export type SandboxMode = 'macos-seatbelt' | 'generic' | 'outside';
@@ -319,7 +321,7 @@ ${workflowStepResearch(options)}
 ${workflowStepStrategy(options)}
 3. **Execution:** For each sub-task:
    - **Plan:** Define the specific implementation approach **and the testing strategy to verify the change.**
-   - **Act:** Apply targeted, surgical changes strictly related to the sub-task. Use the available tools (e.g., ${formatToolName(EDIT_TOOL_NAME)}, ${formatToolName(WRITE_FILE_TOOL_NAME)}, ${formatToolName(SHELL_TOOL_NAME)}). Ensure changes are idiomatically complete and follow all workspace standards, even if it requires multiple tool calls. **Include necessary automated tests; a change is incomplete without verification logic.** Avoid unrelated refactoring or "cleanup" of outside code. Before making manual code changes, check if an ecosystem tool (like 'eslint --fix', 'prettier --write', 'go fmt', 'cargo fmt') is available in the project to perform the task automatically.
+   - **Act:** Apply targeted, surgical changes strictly related to the sub-task. Use the available tools (e.g., ${options.shellOnlyMode ? formatToolName(SHELL_TOOL_NAME) : `${formatToolName(EDIT_TOOL_NAME)}, ${formatToolName(WRITE_FILE_TOOL_NAME)}, ${formatToolName(SHELL_TOOL_NAME)}`}). Ensure changes are idiomatically complete and follow all workspace standards, even if it requires multiple tool calls. **Include necessary automated tests; a change is incomplete without verification logic.** Avoid unrelated refactoring or "cleanup" of outside code. Before making manual code changes, check if an ecosystem tool (like 'eslint --fix', 'prettier --write', 'go fmt', 'cargo fmt') is available in the project to perform the task automatically.
    - **Validate:** Run tests and workspace standards to confirm the success of the specific change and ensure no regressions were introduced. After making code changes, execute the project-specific build, linting and type-checking commands (e.g., 'tsc', 'npm run lint', 'ruff check .') that you have identified for this project.${workflowVerifyStandardsSuffix(options.interactive)}
 
 **Validation is the only path to finality.** Never assume success or settle for unverified changes. Rigorous, exhaustive verification is mandatory; it prevents the compounding cost of diagnosing failures later. A task is only complete when the behavioral correctness of the change has been verified and its structural integrity is confirmed within the full project context. Prioritize comprehensive validation above all else, utilizing redirection and focused analysis to manage high-output tasks without sacrificing depth. Never sacrifice validation rigor for the sake of brevity or to minimize tool-call overhead; partial or isolated checks are insufficient when more comprehensive validation is possible.
@@ -357,7 +359,22 @@ export function renderOperationalGuidelines(
 - **Explain Critical Commands:** Before executing commands with ${formatToolName(SHELL_TOOL_NAME)} that modify the file system, codebase, or system state, provide a brief explanation of the command's purpose and potential impact. The user will see a confirmation dialogue — use that rather than ${formatToolName(ASK_USER_TOOL_NAME)} to get permission.
 - **Security First:** Apply security best practices. Protect secrets, API keys, and sensitive information from exposure in code, logs, or commits.
 
-## Tool Routing Rules
+${
+  options.shellOnlyMode
+    ? `## Shell Playbook
+You operate primarily through ${formatToolName(SHELL_TOOL_NAME)}. Use standard Unix commands for all file operations:
+- **Search file contents:** \`grep -rn "pattern" .\`, \`rg "pattern"\`, or \`git grep "pattern"\`
+- **Find files by name/pattern:** \`find . -name "pattern" -type f\`, \`fd "pattern"\`, or \`git ls-files "pattern"\`
+- **Read file contents:** \`cat path\`, \`head -n 50 path\`, \`tail -n 20 path\`, or \`sed -n '10,30p' path\`
+- **Edit files:** \`sed -i 's/old/new/g' path\` for surgical edits, or \`cat << 'EOF' > path\` for full file writes
+- **Create files:** \`mkdir -p dir && cat << 'EOF' > dir/file\` (use quoted heredoc delimiter to prevent variable expansion)
+
+### Guardrails
+- Always use \`git ls-files\` or \`--exclude-dir={node_modules,.git,dist}\` when searching to skip ignored paths
+- Before overwriting a file, verify the target path is correct
+- For multi-line edits, prefer writing the complete file with heredoc over chained sed commands
+`
+    : `## Tool Routing Rules
 You have dedicated tools for common operations. You MUST use the dedicated tool instead of ${formatToolName(SHELL_TOOL_NAME)} when one exists:
 - **Search file contents:** Use ${formatToolName(GREP_TOOL_NAME)}, NOT shell commands like \`grep\`, \`rg\`, \`ag\`, or \`ack\`.
 - **Find files by name/pattern:** Use ${formatToolName(GLOB_TOOL_NAME)}, NOT \`find\`, \`ls -R\`, or \`tree\`.
@@ -366,9 +383,10 @@ You have dedicated tools for common operations. You MUST use the dedicated tool 
 - **Plan complex changes:** Use ${formatToolName(ENTER_PLAN_MODE_TOOL_NAME)}, NOT writing plans to stdout or creating plan files manually via shell.
 
 Only use ${formatToolName(SHELL_TOOL_NAME)} for operations that have NO dedicated tool: running builds, tests, linters, package managers, git operations, starting/stopping services, and system administration commands.
-
+`
+}
 ## Execution Discipline
-- When you have a tool for something, USE IT. Do not reason about what a tool might do — call it.
+- ${options.shellOnlyMode ? 'Execute commands decisively. Do not reason about what a command might do — run it.' : 'When you have a tool for something, USE IT. Do not reason about what a tool might do — call it.'}
 - Do NOT second-guess yourself. If you have decided on an approach, execute it. Do not output "Wait...", "Actually...", "Let me reconsider..." — commit and act.
 - If a tool call fails, read the error, fix the issue, and retry ONCE. If it fails again, report to the user.
 - Never loop: if you have tried the same approach twice with the same result, stop and try a different approach or ask the user.
