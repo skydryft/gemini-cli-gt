@@ -161,6 +161,14 @@ function showCitations(settings: LoadedSettings): boolean {
   return true;
 }
 
+function isTokenUsageEnabled(settings: LoadedSettings): boolean {
+  const enabled = settings.merged.ui.showTokenUsage;
+  if (enabled !== undefined) {
+    return enabled;
+  }
+  return true;
+}
+
 /**
  * Calculates the current streaming state based on tool call status and responding flag.
  */
@@ -1008,8 +1016,25 @@ export const useGeminiStream = (
           userMessageTimestamp,
         );
       }
+
+      if (isTokenUsageEnabled(settings) && event.value.usageMetadata) {
+        const meta = event.value.usageMetadata;
+        addItem(
+          {
+            type: 'token_usage',
+            usage: {
+              promptTokenCount: meta.promptTokenCount ?? 0,
+              candidatesTokenCount: meta.candidatesTokenCount ?? 0,
+              cachedContentTokenCount: meta.cachedContentTokenCount,
+              thoughtsTokenCount: meta.thoughtsTokenCount,
+              totalTokenCount: meta.totalTokenCount,
+            },
+          } as HistoryItemWithoutId,
+          userMessageTimestamp,
+        );
+      }
     },
-    [addItem],
+    [addItem, settings],
   );
 
   const handleChatCompressionEvent = useCallback(

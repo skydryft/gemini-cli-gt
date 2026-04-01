@@ -370,6 +370,19 @@ export type HistoryItemMcpStatus = HistoryItemBase & {
   showSchema: boolean;
 };
 
+export interface TokenUsageData {
+  promptTokenCount: number;
+  candidatesTokenCount: number;
+  cachedContentTokenCount?: number;
+  thoughtsTokenCount?: number;
+  totalTokenCount?: number;
+}
+
+export type HistoryItemTokenUsage = HistoryItemBase & {
+  type: 'token_usage';
+  usage: TokenUsageData;
+};
+
 export type HistoryItemWithoutId =
   | HistoryItemUser
   | HistoryItemUserShell
@@ -394,7 +407,8 @@ export type HistoryItemWithoutId =
   | HistoryItemMcpStatus
   | HistoryItemChatList
   | HistoryItemThinking
-  | HistoryItemHint;
+  | HistoryItemHint
+  | HistoryItemTokenUsage;
 
 export type HistoryItem = HistoryItemWithoutId & { id: number };
 

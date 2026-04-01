@@ -35,6 +35,7 @@ import { ChatList } from './views/ChatList.js';
 import { ModelMessage } from './messages/ModelMessage.js';
 import { ThinkingMessage } from './messages/ThinkingMessage.js';
 import { HintMessage } from './messages/HintMessage.js';
+import { TokenUsageMessage } from './messages/TokenUsageMessage.js';
 import { getInlineThinkingMode } from '../utils/inlineThinkingMode.js';
 import { useSettings } from '../contexts/SettingsContext.js';
 
@@ -245,6 +246,9 @@ export const HistoryItemDisplay: React.FC<HistoryItemDisplayProps> = ({
       )}
       {itemForDisplay.type === 'chat_list' && (
         <ChatList chats={itemForDisplay.chats} />
+      )}
+      {itemForDisplay.type === 'token_usage' && (
+        <TokenUsageMessage usage={itemForDisplay.usage} />
       )}
     </Box>
   );

@@ -7,5 +7,26 @@
   },
   "general": {
     "devtools": true
+  },
+  "ui": {
+    "showTokenUsage": true,
+    "hideFooter": false,
+    "footer": {
+      "showLabels": true,
+      "hideContextPercentage": false,
+      "hideModelInfo": false,
+      "items": [
+        "workspace",
+        "git-branch",
+        "sandbox",
+        "model-name",
+        "context-used",
+        "quota",
+        "memory-usage",
+        "session-id",
+        "code-changes",
+        "token-count"
+      ]
+    }
   }
 }

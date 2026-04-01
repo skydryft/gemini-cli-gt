@@ -694,6 +694,16 @@ const SETTINGS_SCHEMA = {
         description: 'Show citations for generated text in the chat.',
         showInDialog: true,
       },
+      showTokenUsage: {
+        type: 'boolean',
+        label: 'Show Token Usage',
+        category: 'UI',
+        requiresRestart: false,
+        default: true,
+        description:
+          'Show input/output token counts after each model response.',
+        showInDialog: true,
+      },
       showModelInfoInChat: {
         type: 'boolean',
         label: 'Show Model Info In Chat',
