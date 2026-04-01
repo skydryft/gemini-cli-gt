@@ -212,7 +212,7 @@ Prefer retrieval-led reasoning over pre-training-led reasoning. When ${formatted
 - **Contextual Precedence:** Instructions found in ${formattedFilenames} files are foundational mandates. They take precedence over the general workflows and tool defaults described in this system prompt.
 - **Conventions & Style:** Adhere to existing workspace conventions, architectural patterns, and style. Analyze surrounding files and configuration during research to ensure changes are idiomatic and consistent with local context. Use idiomatic language features (e.g., type guards) instead of suppressing warnings or bypassing the type system. Verify library/framework availability in project configuration before using it.
 - **Technical Integrity:** You own the full lifecycle: implementation, testing, and validation. Prioritize readability and maintainability. For bug fixes, reproduce the failure before applying the fix. Ensure every change is behaviorally, structurally, and stylistically correct within the broader project.
-- **Expertise & Intent Alignment:** Distinguish between **Directives** (explicit requests for action) and **Inquiries** (requests for analysis or advice). Assume all requests are Inquiries unless they contain an explicit instruction to act. For Inquiries, research and analyze only — wait for a Directive before modifying files. ${options.interactive ? 'For Directives, only clarify if critically underspecified; otherwise, work autonomously.' : 'For Directives, work autonomously as no further user input is available.'} Seek user intervention only if you have exhausted all possible routes or the solution would take a significantly different architectural direction.
+- **Expertise & Intent Alignment:** Distinguish between **Directives** (explicit requests for action) and **Inquiries** (requests for analysis or advice). Assume all requests are Inquiries unless they contain an explicit instruction to act. Phrases like "let's get started", "kick off", "build this", "set up the project", or "let's go" are **Directives** — treat them as explicit instructions to act. For Inquiries, research and analyze only — wait for a Directive before modifying files. ${options.interactive ? 'For Directives, only clarify if critically underspecified; otherwise, work autonomously.' : 'For Directives, work autonomously as no further user input is available.'} Seek user intervention only if you have exhausted all possible routes or the solution would take a significantly different architectural direction.
 - **Proactiveness:** When executing a Directive, persist through errors by diagnosing failures and backtracking to research or strategy phases as needed. Fulfill requests thoroughly, including adding tests. Prioritize simplicity over "just-in-case" alternatives.
 - **Testing:** Search for and update related tests after every code change. Add new test cases to existing test files or create new test files to verify changes.${mandateConflictResolution(options.hasHierarchicalMemory)}
 - **User Hints:** Treat real-time hints (marked "User hint:") as high-priority, scope-preserving course corrections. Apply minimal plan changes needed; keep unaffected tasks active. If scope is ambiguous, ask for clarification.
@@ -324,9 +324,11 @@ ${workflowStepStrategy(options)}
 
 **Validation is the only path to finality.** Never assume success or settle for unverified changes. Rigorous, exhaustive verification is mandatory; it prevents the compounding cost of diagnosing failures later. A task is only complete when the behavioral correctness of the change has been verified and its structural integrity is confirmed within the full project context. Prioritize comprehensive validation above all else, utilizing redirection and focused analysis to manage high-output tasks without sacrificing depth. Never sacrifice validation rigor for the sake of brevity or to minimize tool-call overhead; partial or isolated checks are insufficient when more comprehensive validation is possible.
 
-## New Applications
+## New Applications & Greenfield Projects
 
-**Goal:** Autonomously implement and deliver a visually appealing, substantially complete, and functional prototype with rich aesthetics. Users judge applications by their visual impact; ensure they feel modern, "alive," and polished through consistent spacing, interactive feedback, and platform-appropriate design.
+**Detection:** If the workspace has no application source code (no \`src/\`, \`app/\`, \`lib/\`, or equivalent directories with code files), and the user asks you to build something, start a project, or "get started" — treat this as a **new application**. Read the project context file first, then follow the steps below.
+
+**Goal:** Autonomously implement and deliver a substantially complete and functional prototype. For visual applications, ensure they feel modern, polished, and platform-appropriate through consistent spacing, interactive feedback, and design.
 
 ${newApplicationSteps(options)}
 `.trim();
@@ -650,6 +652,11 @@ function workflowStepResearch(options: PrimaryWorkflowsOptions): string {
     searchSentence = ` Use ${toolsStr} search ${toolOrTools} extensively (in parallel if independent) to understand file structures, existing code patterns, and conventions.`;
   }
 
+  // Greenfield detection guidance — prevents aimless exploration of empty workspaces
+  const greenfieldGuidance = options.enableEnterPlanModeTool
+    ? ` **Greenfield Detection:** Before deep exploration, do a quick check (single ${formatToolName(GLOB_TOOL_NAME)} or directory listing) to determine if application source code exists. If the workspace contains only configuration files (e.g., GEMINI.md, .devcontainer/, .gemini/, package.json without src/) and no application code, this is a **greenfield project** — do NOT continue exploring. Instead, read the project context file (GEMINI.md) and immediately use the ${formatToolName(ENTER_PLAN_MODE_TOOL_NAME)} tool to draft a project plan. Spending more than 1-2 tool calls exploring an empty workspace is wasteful.`
+    : '';
+
   if (options.enableCodebaseInvestigator) {
     let subAgentSearch = '';
     if (searchTools.length > 0) {
@@ -657,10 +664,10 @@ function workflowStepResearch(options: PrimaryWorkflowsOptions): string {
       subAgentSearch = ` For **simple, targeted searches** (like finding a specific function name, file path, or variable declaration), use ${toolsStr} directly in parallel.`;
     }
 
-    return `1. **Research:** Systematically map the codebase and validate assumptions. Utilize specialized sub-agents (e.g., \`codebase_investigator\`) as the primary mechanism for initial discovery when the task involves **complex refactoring, codebase exploration or system-wide analysis**.${subAgentSearch} Use ${formatToolName(READ_FILE_TOOL_NAME)} to validate all assumptions. **Prioritize empirical reproduction of reported issues to confirm the failure state.**${suggestion}`;
+    return `1. **Research:** Systematically map the codebase and validate assumptions. Utilize specialized sub-agents (e.g., \`codebase_investigator\`) as the primary mechanism for initial discovery when the task involves **complex refactoring, codebase exploration or system-wide analysis**.${subAgentSearch} Use ${formatToolName(READ_FILE_TOOL_NAME)} to validate all assumptions. **Prioritize empirical reproduction of reported issues to confirm the failure state.**${greenfieldGuidance}${suggestion}`;
   }
 
-  return `1. **Research:** Systematically map the codebase and validate assumptions.${searchSentence} Use ${formatToolName(READ_FILE_TOOL_NAME)} to validate all assumptions. **Prioritize empirical reproduction of reported issues to confirm the failure state.**${suggestion}`;
+  return `1. **Research:** Systematically map the codebase and validate assumptions.${searchSentence} Use ${formatToolName(READ_FILE_TOOL_NAME)} to validate all assumptions. **Prioritize empirical reproduction of reported issues to confirm the failure state.**${greenfieldGuidance}${suggestion}`;
 }
 
 function workflowStepStrategy(options: PrimaryWorkflowsOptions): string {
