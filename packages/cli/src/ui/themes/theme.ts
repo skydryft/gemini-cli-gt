@@ -280,6 +280,8 @@ export class Theme {
         link: this.colors.AccentBlue,
         accent: this.colors.AccentPurple,
         response: this.colors.Foreground,
+        thinking: this.colors.AccentCyan,
+        command: this.colors.AccentYellow,
       },
       background: {
         primary: this.colors.Background,
@@ -583,6 +585,8 @@ export function createCustomTheme(customTheme: CustomTheme): Theme {
         customTheme.text?.response ??
         customTheme.text?.primary ??
         colors.Foreground,
+      thinking: customTheme.text?.thinking ?? colors.AccentCyan,
+      command: customTheme.text?.command ?? colors.AccentYellow,
     },
     background: {
       primary: customTheme.background?.primary ?? colors.Background,

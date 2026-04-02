@@ -38,7 +38,7 @@ export const UserShellMessage: React.FC<UserShellMessageProps> = ({
         width={width}
       >
         <Text color={theme.ui.symbol}>$ </Text>
-        <Text color={theme.text.primary}>{commandToDisplay}</Text>
+        <Text color={theme.text.command}>{commandToDisplay}</Text>
       </Box>
     </HalfLinePaddedBox>
   );

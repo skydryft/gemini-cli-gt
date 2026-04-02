@@ -93,6 +93,8 @@ describe('<Header />', () => {
         link: '',
         accent: '#123456',
         response: '',
+        thinking: '',
+        command: '',
       },
       background: {
         primary: '',

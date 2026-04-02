@@ -15,6 +15,7 @@ import {
   SHELL_FOCUS_HINT_DELAY_MS,
 } from '../../constants.js';
 import { theme } from '../../semantic-colors.js';
+import { colorizeLine } from '../../utils/CodeColorizer.js';
 import {
   type Config,
   SHELL_TOOL_NAME,
@@ -205,7 +206,11 @@ export const ToolInfo: React.FC<ToolInfoProps> = ({
   originalRequestName,
 }) => {
   const status = mapCoreStatusToDisplayStatus(coreStatus);
+  const isShell = isShellTool(name);
   const nameColor = React.useMemo<string>(() => {
+    if (isShell) {
+      return theme.text.command;
+    }
     switch (emphasis) {
       case 'high':
         return theme.text.primary;
@@ -218,7 +223,7 @@ export const ToolInfo: React.FC<ToolInfoProps> = ({
         return exhaustiveCheck;
       }
     }
-  }, [emphasis]);
+  }, [emphasis, isShell]);
 
   // Hide description for completed Ask User tools (the result display speaks for itself)
   const isCompletedAskUser = isCompletedAskUserTool(name, status);
@@ -238,7 +243,11 @@ export const ToolInfo: React.FC<ToolInfoProps> = ({
         {!isCompletedAskUser && (
           <>
             {' '}
-            <Text color={theme.text.secondary}>{description}</Text>
+            {isShell ? (
+              <Text>{colorizeLine(description, 'bash')}</Text>
+            ) : (
+              <Text color={theme.text.secondary}>{description}</Text>
+            )}
           </>
         )}
       </Text>

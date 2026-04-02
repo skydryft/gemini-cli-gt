@@ -34,6 +34,8 @@ const semanticColors: SemanticColors = {
     link: '#268bd2',
     accent: '#268bd2',
     response: '#657b83',
+    thinking: '#2aa198',
+    command: '#b58900',
   },
   background: {
     primary: '#fdf6e3',

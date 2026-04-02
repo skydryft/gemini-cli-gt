@@ -20,6 +20,8 @@ describe('ColorsDisplay', () => {
         link: '#0000ff',
         accent: '#ff00ff',
         response: '#ffffff',
+        thinking: '#00ffff',
+        command: '#ffff00',
       },
       background: {
         primary: '#000000',

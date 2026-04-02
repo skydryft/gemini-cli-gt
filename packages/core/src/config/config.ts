@@ -286,6 +286,8 @@ export interface CustomTheme {
     link?: string;
     accent?: string;
     response?: string;
+    thinking?: string;
+    command?: string;
   };
   background?: {
     primary?: string;
@@ -1081,10 +1083,8 @@ export class Config implements McpContext, AgentLoopContext {
     this.bugCommand = params.bugCommand;
     this.model = params.model;
     this.disableLoopDetection = params.disableLoopDetection ?? false;
-    this.loopDetectionToolCallThreshold =
-      params.loopDetectionToolCallThreshold;
-    this.loopDetectionContentThreshold =
-      params.loopDetectionContentThreshold;
+    this.loopDetectionToolCallThreshold = params.loopDetectionToolCallThreshold;
+    this.loopDetectionContentThreshold = params.loopDetectionContentThreshold;
     this.loopDetectionLlmCheckAfterTurns =
       params.loopDetectionLlmCheckAfterTurns;
     this._activeModel = params.model;

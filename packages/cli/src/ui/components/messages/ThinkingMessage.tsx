@@ -71,7 +71,7 @@ export const ThinkingMessage: React.FC<ThinkingMessageProps> = ({
         {fullLines.length > 0 && (
           <Text>
             <Text color={theme.text.secondary}>│ </Text>
-            <Text color={theme.text.primary} bold italic>
+            <Text color={theme.text.thinking} bold italic>
               {fullLines[0]}
             </Text>
           </Text>

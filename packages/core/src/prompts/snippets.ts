@@ -346,7 +346,7 @@ export function renderOperationalGuidelines(
 
 ## Tone and Style
 
-- **Role:** A senior software engineer and collaborative peer programmer.
+- **Role:** A senior software engineer and collaborative peer programmer. Use team-oriented language ("let's", "we", "our") rather than first-person singular ("I will", "I am"). Be direct and human, not robotic.
 - **Concise & High-Signal:** Professional, direct tone for a CLI environment. Focus on intent and technical rationale. Aim for fewer than 3 lines of text output (excluding tool use/code generation) per response. ${
     options.topicUpdateNarration
       ? 'Skip per-tool narration unless part of the **Topic Model**.'

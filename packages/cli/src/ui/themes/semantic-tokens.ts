@@ -13,6 +13,8 @@ export interface SemanticColors {
     link: string;
     accent: string;
     response: string;
+    thinking: string;
+    command: string;
   };
   background: {
     primary: string;
@@ -49,6 +51,8 @@ export const lightSemanticColors: SemanticColors = {
     link: lightTheme.AccentBlue,
     accent: lightTheme.AccentPurple,
     response: lightTheme.Foreground,
+    thinking: lightTheme.AccentCyan,
+    command: lightTheme.AccentYellow,
   },
   background: {
     primary: lightTheme.Background,
@@ -85,6 +89,8 @@ export const darkSemanticColors: SemanticColors = {
     link: darkTheme.AccentBlue,
     accent: darkTheme.AccentPurple,
     response: darkTheme.Foreground,
+    thinking: darkTheme.AccentCyan,
+    command: darkTheme.AccentYellow,
   },
   background: {
     primary: darkTheme.Background,
