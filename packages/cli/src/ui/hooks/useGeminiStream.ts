@@ -897,9 +897,7 @@ export const useGeminiStream = (
 
   const handleThoughtEvent = useCallback(
     (eventValue: ThoughtSummary, _userMessageTimestamp: number) => {
-      startTransition(() => {
-        setThought(eventValue);
-      });
+      setThought(eventValue);
 
       if (getInlineThinkingMode(settings) === 'full') {
         addItem({
@@ -1236,7 +1234,7 @@ export const useGeminiStream = (
 
       for await (const event of stream) {
         if (
-          event.type !== ServerGeminiEventType.Thought &&
+          event.type === ServerGeminiEventType.Content &&
           thoughtRef.current !== null
         ) {
           setThought(null);
