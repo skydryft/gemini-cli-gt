@@ -532,9 +532,9 @@ export function renderTaskTracker(shellOnlyMode?: boolean): string {
   if (shellOnlyMode) {
     return `
 # TASK MANAGEMENT PROTOCOL
-You are operating with a persistent file-based task tracking system located at \`.tracker/tasks/\`. Manage tasks using shell commands:
-- **Create tasks:** Write JSON files to \`.tracker/tasks/\` with \`cat << 'EOF' > .tracker/tasks/<name>.json\`
-- **List tasks:** \`ls .tracker/tasks/\` and \`cat .tracker/tasks/<name>.json\`
+You are operating with a persistent file-based task tracking system located at \`.gemini/tracker/tasks/\`. Manage tasks using shell commands:
+- **Create tasks:** Write JSON files to \`.gemini/tracker/tasks/\` with \`cat << 'EOF' > .gemini/tracker/tasks/<name>.json\`
+- **List tasks:** \`ls .gemini/tracker/tasks/\` and \`cat .gemini/tracker/tasks/<name>.json\`
 - **Update tasks:** Rewrite JSON files with updated status fields
 
 Rules:
@@ -551,7 +551,7 @@ Rules:
 
   return `
 # TASK MANAGEMENT PROTOCOL
-You are operating with a persistent file-based task tracking system located at \`.tracker/tasks/\`. You must adhere to the following rules:
+You are operating with a persistent file-based task tracking system located at \`.gemini/tracker/tasks/\`. You must adhere to the following rules:
 
 1.  **NO IN-MEMORY LISTS**: Do not maintain a mental list of tasks or write markdown checkboxes in the chat. Use the provided tools (${trackerCreate}, ${trackerList}, ${trackerUpdate}) for all state management.
 2.  **IMMEDIATE DECOMPOSITION**: Upon receiving a task, evaluate its functional complexity and scope. If the request involves more than a single atomic modification, or necessitates research before execution, you MUST immediately decompose it into discrete entries using ${trackerCreate}.
