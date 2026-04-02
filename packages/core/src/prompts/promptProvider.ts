@@ -228,7 +228,6 @@ export class PromptProvider {
           : this.withSection('finalReminder', () => ({
               readFileToolName: READ_FILE_TOOL_NAME,
             })),
-        shellOnlyMode: isShellOnlyMode,
       } as snippets.SystemPromptOptions;
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion

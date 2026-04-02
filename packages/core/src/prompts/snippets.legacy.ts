@@ -40,7 +40,6 @@ export interface SystemPromptOptions {
   interactiveYoloMode?: boolean;
   gitRepo?: GitRepoOptions;
   finalReminder?: FinalReminderOptions;
-  shellOnlyMode?: boolean;
 }
 
 export interface PreambleOptions {
@@ -128,7 +127,7 @@ ${
     : renderPrimaryWorkflows(options.primaryWorkflows)
 }
 
-${options.taskTracker ? renderTaskTracker(options.shellOnlyMode) : ''}
+${options.taskTracker ? renderTaskTracker() : ''}
 
 ${renderOperationalGuidelines(options.operationalGuidelines)}
 
@@ -490,26 +489,10 @@ An approved plan is available for this task.
 `;
 }
 
-export function renderTaskTracker(shellOnlyMode?: boolean): string {
-  if (shellOnlyMode) {
-    return `
-# TASK MANAGEMENT PROTOCOL
-You are operating with a persistent file-based task tracking system located at \`.gemini/tracker/tasks/\`. Manage tasks using shell commands:
-- **Create tasks:** Write JSON files to \`.gemini/tracker/tasks/\` with \`cat << 'EOF' > .gemini/tracker/tasks/<name>.json\`
-- **List tasks:** \`ls .gemini/tracker/tasks/\` and \`cat .gemini/tracker/tasks/<name>.json\`
-- **Update tasks:** Rewrite JSON files with updated status fields
-
-Rules:
-1.  **NO IN-MEMORY LISTS**: Do not maintain a mental list of tasks. Use the task files for all state management.
-2.  **IMMEDIATE DECOMPOSITION**: If a request involves more than a single atomic modification, decompose it into discrete task files immediately.
-3.  **VERIFICATION**: Before marking a task as complete, verify the work is actually done (e.g., run the test, check file existence).
-4.  **STATE OVER CHAT**: If the user says "I think we finished that," but the task file says 'pending', verify explicitly before updating.
-5.  **DEPENDENCY MANAGEMENT**: Respect task topology. Never execute a task if its dependencies are not marked as 'closed'.`.trim();
-  }
-
+export function renderTaskTracker(): string {
   return `
 # TASK MANAGEMENT PROTOCOL
-You are operating with a persistent file-based task tracking system located at \`.gemini/tracker/tasks/\`. You must adhere to the following rules:
+You are operating with a persistent file-based task tracking system located at \`.tracker/tasks/\`. You must adhere to the following rules:
 
 1.  **NO IN-MEMORY LISTS**: Do not maintain a mental list of tasks or write markdown checkboxes in the chat. Use the provided tools (\`${TRACKER_CREATE_TASK_TOOL_NAME}\`, \`${TRACKER_LIST_TASKS_TOOL_NAME}\`, \`${TRACKER_UPDATE_TASK_TOOL_NAME}\`) for all state management.
 2.  **IMMEDIATE DECOMPOSITION**: Upon receiving a task, evaluate its functional complexity and scope. If the request involves more than a single atomic modification, or necessitates research before execution, you MUST immediately decompose it into discrete entries using \`${TRACKER_CREATE_TASK_TOOL_NAME}\`.
