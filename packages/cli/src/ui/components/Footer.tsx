@@ -405,20 +405,29 @@ export const Footer: React.FC<{ copyModeEnabled?: boolean }> = ({
         break;
       }
       case 'token-count': {
-        let total = 0;
-        for (const m of Object.values(uiState.sessionStats.metrics.models))
-          total += m.tokens.total;
-        if (total > 0) {
-          const formatter = new Intl.NumberFormat('en-US', {
+        let input = 0;
+        let output = 0;
+        for (const m of Object.values(uiState.sessionStats.metrics.models)) {
+          input += m.tokens.input;
+          output += m.tokens.candidates;
+        }
+        if (input > 0 || output > 0) {
+          const fmt = new Intl.NumberFormat('en-US', {
             notation: 'compact',
             maximumFractionDigits: 1,
           });
-          const formatted = formatter.format(total).toLowerCase();
+          const fmtIn = fmt.format(input).toLowerCase();
+          const fmtOut = fmt.format(output).toLowerCase();
+          const str = `↑${fmtIn} ↓${fmtOut}`;
           addCol(
             id,
             header,
-            () => <Text color={itemColor}>{formatted} tokens</Text>,
-            formatted.length + 7,
+            () => (
+              <Text color={itemColor}>
+                ↑{fmtIn} ↓{fmtOut}
+              </Text>
+            ),
+            str.length,
           );
         }
         break;
