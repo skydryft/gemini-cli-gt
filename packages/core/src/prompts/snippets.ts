@@ -50,6 +50,7 @@ export interface SystemPromptOptions {
   sandbox?: SandboxOptions;
   interactiveYoloMode?: boolean;
   gitRepo?: GitRepoOptions;
+  shellOnlyMode?: boolean;
 }
 
 export interface PreambleOptions {
@@ -139,7 +140,7 @@ ${
     : renderPrimaryWorkflows(options.primaryWorkflows)
 }
 
-${options.taskTracker ? renderTaskTracker() : ''}
+${options.taskTracker ? renderTaskTracker(options.shellOnlyMode) : ''}
 
 ${renderOperationalGuidelines(options.operationalGuidelines)}
 
@@ -527,7 +528,23 @@ ${trimmed}
   return `\n---\n\n<loaded_context>\n${sections.join('\n')}\n</loaded_context>`;
 }
 
-export function renderTaskTracker(): string {
+export function renderTaskTracker(shellOnlyMode?: boolean): string {
+  if (shellOnlyMode) {
+    return `
+# TASK MANAGEMENT PROTOCOL
+You are operating with a persistent file-based task tracking system located at \`.tracker/tasks/\`. Manage tasks using shell commands:
+- **Create tasks:** Write JSON files to \`.tracker/tasks/\` with \`cat << 'EOF' > .tracker/tasks/<name>.json\`
+- **List tasks:** \`ls .tracker/tasks/\` and \`cat .tracker/tasks/<name>.json\`
+- **Update tasks:** Rewrite JSON files with updated status fields
+
+Rules:
+1.  **NO IN-MEMORY LISTS**: Do not maintain a mental list of tasks. Use the task files for all state management.
+2.  **IMMEDIATE DECOMPOSITION**: If a request involves more than a single atomic modification, decompose it into discrete task files immediately.
+3.  **VERIFICATION**: Before marking a task as complete, verify the work is actually done (e.g., run the test, check file existence).
+4.  **STATE OVER CHAT**: If the user says "I think we finished that," but the task file says 'pending', verify explicitly before updating.
+5.  **DEPENDENCY MANAGEMENT**: Respect task topology. Never execute a task if its dependencies are not marked as 'closed'.`.trim();
+  }
+
   const trackerCreate = formatToolName(TRACKER_CREATE_TASK_TOOL_NAME);
   const trackerList = formatToolName(TRACKER_LIST_TASKS_TOOL_NAME);
   const trackerUpdate = formatToolName(TRACKER_UPDATE_TASK_TOOL_NAME);
@@ -653,6 +670,12 @@ function mandateContinueWork(interactive: boolean): string {
 }
 
 function workflowStepResearch(options: PrimaryWorkflowsOptions): string {
+  // Shell-only mode: coach bash-based exploration instead of referencing tools
+  if (options.shellOnlyMode) {
+    const greenfieldGuidance = ` **Greenfield Detection:** Before deep exploration, run a quick \`ls\` to determine if application source code exists. If the workspace contains only configuration files and no application code, this is a **greenfield project** — read the project context file (GEMINI.md) and draft a plan immediately. Do not spend more than 1-2 commands exploring an empty workspace.`;
+    return `1. **Research:** Systematically map the codebase and validate assumptions. Use shell commands extensively: \`find\` for file discovery, \`grep -rn\` for content search, \`cat\`/\`head\` for reading files. Run multiple independent searches in parallel when feasible. **Prioritize empirical reproduction of reported issues to confirm the failure state.**${greenfieldGuidance}`;
+  }
+
   let suggestion = '';
   if (options.enableEnterPlanModeTool) {
     suggestion = ` If the request is ambiguous, broad in scope, or involves architectural decisions or cross-cutting changes, use the ${formatToolName(ENTER_PLAN_MODE_TOOL_NAME)} tool to safely research and design your strategy. Do NOT use Plan Mode for straightforward bug fixes, answering questions, or simple inquiries.`;
