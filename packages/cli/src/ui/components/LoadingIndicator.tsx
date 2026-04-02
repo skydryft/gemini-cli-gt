@@ -71,6 +71,12 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
             ? 'Thinking...'
             : undefined);
 
+  // Show first line of thought description as secondary context
+  const thoughtDetail =
+    thought?.description && !thoughtLabel
+      ? thought.description.split('\n')[0]?.trim()
+      : undefined;
+
   const cancelAndTimerContent =
     showCancelAndTimer &&
     streamingState !== StreamingState.WaitingForConfirmation
@@ -108,6 +114,17 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
             <Text color={theme.text.primary} italic wrap="truncate-end">
               {primaryText}
             </Text>
+            {thoughtDetail && (
+              <Text
+                color={theme.text.secondary}
+                dimColor
+                italic
+                wrap="truncate-end"
+              >
+                {' — '}
+                {thoughtDetail}
+              </Text>
+            )}
             {primaryText === INTERACTIVE_SHELL_WAITING_PHRASE && (
               <Text color={theme.ui.active} italic>
                 {' '}
@@ -152,6 +169,17 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
               <Text color={theme.text.primary} italic wrap="truncate-end">
                 {primaryText}
               </Text>
+              {thoughtDetail && (
+                <Text
+                  color={theme.text.secondary}
+                  dimColor
+                  italic
+                  wrap="truncate-end"
+                >
+                  {' — '}
+                  {thoughtDetail}
+                </Text>
+              )}
               {primaryText === INTERACTIVE_SHELL_WAITING_PHRASE && (
                 <Text color={theme.ui.active} italic>
                   {' '}

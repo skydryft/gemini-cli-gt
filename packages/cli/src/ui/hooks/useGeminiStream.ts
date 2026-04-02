@@ -1232,6 +1232,25 @@ export const useGeminiStream = (
         }
       };
 
+      // Synthetic acknowledgment: if no thought or content arrives within
+      // 3 seconds, show a placeholder so the user knows the model is working.
+      let hasReceivedFirstEvent = false;
+      const syntheticThoughtTimer = setTimeout(() => {
+        if (!hasReceivedFirstEvent && !signal.aborted) {
+          const syntheticThought: ThoughtSummary = {
+            subject: 'Analyzing your request...',
+            description: '',
+          };
+          setThought(syntheticThought);
+          if (getInlineThinkingMode(settings) === 'full') {
+            addItem({
+              type: 'thinking',
+              thought: syntheticThought,
+            } as HistoryItemThinking);
+          }
+        }
+      }, 3000);
+
       for await (const event of stream) {
         if (
           event.type === ServerGeminiEventType.Content &&
@@ -1242,11 +1261,15 @@ export const useGeminiStream = (
 
         switch (event.type) {
           case ServerGeminiEventType.Thought:
+            hasReceivedFirstEvent = true;
+            clearTimeout(syntheticThoughtTimer);
             flushContentBuffer();
             setLastGeminiActivityTime(Date.now());
             handleThoughtEvent(event.value, userMessageTimestamp);
             break;
           case ServerGeminiEventType.Content:
+            hasReceivedFirstEvent = true;
+            clearTimeout(syntheticThoughtTimer);
             setLastGeminiActivityTime(Date.now());
             if (!hasReceivedFirstContent) {
               // Process the first content event immediately for instant feedback
@@ -1339,6 +1362,8 @@ export const useGeminiStream = (
           }
         }
       }
+      // Clean up synthetic thought timer
+      clearTimeout(syntheticThoughtTimer);
       // Final flush: ensure any remaining buffered content is processed
       flushContentBuffer();
 
@@ -1370,6 +1395,7 @@ export const useGeminiStream = (
       pendingHistoryItemRef,
       setPendingHistoryItem,
       setThought,
+      settings,
     ],
   );
   const submitQuery = useCallback(

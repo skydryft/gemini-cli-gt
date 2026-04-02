@@ -68,15 +68,20 @@ export const ThinkingMessage: React.FC<ThinkingMessageProps> = ({
       )}
 
       <Box paddingLeft={1} flexDirection="column">
-        <Text> </Text>
         {fullLines.length > 0 && (
-          <Text color={theme.text.primary} bold italic>
-            {fullLines[0]}
+          <Text>
+            <Text color={theme.text.secondary}>│ </Text>
+            <Text color={theme.text.primary} bold italic>
+              {fullLines[0]}
+            </Text>
           </Text>
         )}
         {fullLines.slice(1).map((line, index) => (
-          <Text key={`body-line-${index}`} color={theme.text.secondary} italic>
-            {line}
+          <Text key={`body-line-${index}`}>
+            <Text color={theme.text.secondary}>│ </Text>
+            <Text color={theme.text.secondary} italic>
+              {line}
+            </Text>
           </Text>
         ))}
       </Box>

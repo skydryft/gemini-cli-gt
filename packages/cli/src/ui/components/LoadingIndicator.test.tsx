@@ -261,7 +261,8 @@ describe('<LoadingIndicator />', () => {
       // Should NOT contain "Thinking... " prefix because the subject already starts with "Thinking"
       expect(output).not.toContain('Thinking... Thinking');
       expect(output).toContain('Thinking about something...');
-      expect(output).not.toContain('and other stuff.');
+      // Description should be shown as secondary context
+      expect(output).toContain('and other stuff.');
     }
     unmount();
   });
