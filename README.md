@@ -49,9 +49,17 @@ of specialized tools.
 }
 ```
 
-**Results:** Initial testing with gemini-3-flash-preview shows a greenfield
-project kickoff completing in 8 turns at ~9k input tokens with 75-80% cache hit
-rate. No tool selection fumbling, no spiraling.
+**Results:** Testing with gemini-3-flash-preview shows a greenfield project
+kickoff completing in under 5 minutes with 75-80% cache hit rate. Context file
+length is critical — keeping GEMINI.md under ~55 lines measurably impacts
+response latency. No tool selection fumbling, no spiraling.
+
+### UX Polish
+
+- **Visual text differentiation** — collaborative persona tone in responses
+- **Response duration** — inline token usage annotations show elapsed time
+- **Copy-paste friendly output** — conversation feed formatting improvements
+- **Session token breakdown** — input/output token counts in footer
 
 ### Other Improvements
 
@@ -63,6 +71,7 @@ See `docs/research/` for the full set of findings driving changes:
   patterns
 - **Static context support** — AGENTS.md for reliable skill injection vs
   on-demand discovery
+- **Task tracker path** — relocated to `.gemini/tracker/tasks/` for consistency
 
 ## Project Structure
 
