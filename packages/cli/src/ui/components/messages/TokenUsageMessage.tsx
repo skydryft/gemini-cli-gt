@@ -23,6 +23,14 @@ interface TokenUsageMessageProps {
   usage: TokenUsageData;
 }
 
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.round(ms / 1000);
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
+}
+
 export const TokenUsageMessage: React.FC<TokenUsageMessageProps> = ({
   usage,
 }) => {
@@ -30,11 +38,14 @@ export const TokenUsageMessage: React.FC<TokenUsageMessageProps> = ({
   const outputStr = formatTokenCount(usage.candidatesTokenCount);
   const cached = usage.cachedContentTokenCount;
   const cacheStr = cached ? ` cached:${formatTokenCount(cached)}` : '';
+  const durationStr = usage.durationMs
+    ? ` ${formatDuration(usage.durationMs)}`
+    : '';
 
   return (
     <Box marginLeft={0}>
       <Text dimColor color={theme.text.secondary}>
-        {`↑${inputStr} ↓${outputStr}${cacheStr}`}
+        {`↑${inputStr} ↓${outputStr}${cacheStr}${durationStr}`}
       </Text>
     </Box>
   );

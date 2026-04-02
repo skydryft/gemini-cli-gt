@@ -376,6 +376,7 @@ export interface TokenUsageData {
   cachedContentTokenCount?: number;
   thoughtsTokenCount?: number;
   totalTokenCount?: number;
+  durationMs?: number;
 }
 
 export type HistoryItemTokenUsage = HistoryItemBase & {

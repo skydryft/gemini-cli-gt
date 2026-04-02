@@ -1026,6 +1026,7 @@ export const useGeminiStream = (
               cachedContentTokenCount: meta.cachedContentTokenCount,
               thoughtsTokenCount: meta.thoughtsTokenCount,
               totalTokenCount: meta.totalTokenCount,
+              durationMs: Date.now() - userMessageTimestamp,
             },
           } as HistoryItemWithoutId,
           userMessageTimestamp,
