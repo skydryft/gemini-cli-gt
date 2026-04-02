@@ -1203,6 +1203,7 @@ export const useGeminiStream = (
       stream: AsyncIterable<GeminiEvent>,
       userMessageTimestamp: number,
       signal: AbortSignal,
+      isContinuation?: boolean,
     ): Promise<StreamProcessingStatus> => {
       let geminiMessageBuffer = '';
       const toolCallRequests: ToolCallRequestInfo[] = [];
@@ -1234,22 +1235,25 @@ export const useGeminiStream = (
 
       // Synthetic acknowledgment: if no thought or content arrives within
       // 3 seconds, show a placeholder so the user knows the model is working.
+      // Skip on continuation calls (after tool results) to avoid duplicates.
       let hasReceivedFirstEvent = false;
-      const syntheticThoughtTimer = setTimeout(() => {
-        if (!hasReceivedFirstEvent && !signal.aborted) {
-          const syntheticThought: ThoughtSummary = {
-            subject: 'Analyzing your request...',
-            description: '',
-          };
-          setThought(syntheticThought);
-          if (getInlineThinkingMode(settings) === 'full') {
-            addItem({
-              type: 'thinking',
-              thought: syntheticThought,
-            } as HistoryItemThinking);
-          }
-        }
-      }, 3000);
+      const syntheticThoughtTimer = isContinuation
+        ? null
+        : setTimeout(() => {
+            if (!hasReceivedFirstEvent && !signal.aborted) {
+              const syntheticThought: ThoughtSummary = {
+                subject: 'Analyzing your request...',
+                description: '',
+              };
+              setThought(syntheticThought);
+              if (getInlineThinkingMode(settings) === 'full') {
+                addItem({
+                  type: 'thinking',
+                  thought: syntheticThought,
+                } as HistoryItemThinking);
+              }
+            }
+          }, 3000);
 
       for await (const event of stream) {
         if (
@@ -1262,14 +1266,14 @@ export const useGeminiStream = (
         switch (event.type) {
           case ServerGeminiEventType.Thought:
             hasReceivedFirstEvent = true;
-            clearTimeout(syntheticThoughtTimer);
+            if (syntheticThoughtTimer) clearTimeout(syntheticThoughtTimer);
             flushContentBuffer();
             setLastGeminiActivityTime(Date.now());
             handleThoughtEvent(event.value, userMessageTimestamp);
             break;
           case ServerGeminiEventType.Content:
             hasReceivedFirstEvent = true;
-            clearTimeout(syntheticThoughtTimer);
+            if (syntheticThoughtTimer) clearTimeout(syntheticThoughtTimer);
             setLastGeminiActivityTime(Date.now());
             if (!hasReceivedFirstContent) {
               // Process the first content event immediately for instant feedback
@@ -1363,7 +1367,7 @@ export const useGeminiStream = (
         }
       }
       // Clean up synthetic thought timer
-      clearTimeout(syntheticThoughtTimer);
+      if (syntheticThoughtTimer) clearTimeout(syntheticThoughtTimer);
       // Final flush: ensure any remaining buffered content is processed
       flushContentBuffer();
 
@@ -1494,6 +1498,7 @@ export const useGeminiStream = (
                 stream,
                 userMessageTimestamp,
                 abortSignal,
+                options?.isContinuation,
               );
 
               if (processingStatus === StreamProcessingStatus.UserCancelled) {
