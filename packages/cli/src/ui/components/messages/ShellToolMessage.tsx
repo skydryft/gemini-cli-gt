@@ -179,19 +179,7 @@ export const ShellToolMessage: React.FC<ShellToolMessageProps> = ({
         {emphasis === 'high' && <TrailingIndicator />}
       </StickyHeader>
 
-      <Box
-        ref={contentRef}
-        width={terminalWidth}
-        borderStyle="round"
-        borderColor={borderColor}
-        borderDimColor={borderDimColor}
-        borderTop={false}
-        borderBottom={false}
-        borderLeft={true}
-        borderRight={true}
-        paddingX={1}
-        flexDirection="column"
-      >
+      <Box ref={contentRef} width={terminalWidth} flexDirection="column">
         <ToolResultDisplay
           resultDisplay={resultDisplay}
           availableTerminalHeight={availableTerminalHeight}

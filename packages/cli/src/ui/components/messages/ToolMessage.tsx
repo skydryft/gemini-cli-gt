@@ -21,7 +21,11 @@ import {
   useFocusHint,
   FocusHint,
 } from './ToolShared.js';
-import { type Config, CoreToolCallStatus, Kind } from '@skydryft/gemini-cli-core';
+import {
+  type Config,
+  CoreToolCallStatus,
+  Kind,
+} from '@skydryft/gemini-cli-core';
 import { ShellInputPrompt } from '../ShellInputPrompt.js';
 import { SUBAGENT_MAX_LINES } from '../../constants.js';
 
@@ -109,18 +113,7 @@ export const ToolMessage: React.FC<ToolMessageProps> = ({
         />
         {emphasis === 'high' && <TrailingIndicator />}
       </StickyHeader>
-      <Box
-        width={terminalWidth}
-        borderStyle="round"
-        borderColor={borderColor}
-        borderDimColor={borderDimColor}
-        borderTop={false}
-        borderBottom={false}
-        borderLeft={true}
-        borderRight={true}
-        paddingX={1}
-        flexDirection="column"
-      >
+      <Box width={terminalWidth} flexDirection="column">
         {status === CoreToolCallStatus.Executing && progress !== undefined && (
           <McpProgressIndicator
             progress={progress}

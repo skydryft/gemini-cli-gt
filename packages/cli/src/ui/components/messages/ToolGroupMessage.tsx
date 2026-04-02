@@ -41,7 +41,7 @@ interface ToolGroupMessageProps {
 }
 
 // Main component renders the border and maps the tools using ToolMessage
-const TOOL_MESSAGE_HORIZONTAL_MARGIN = 4;
+const TOOL_MESSAGE_HORIZONTAL_MARGIN = 0;
 
 export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
   item,
@@ -257,47 +257,22 @@ export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
               <ToolMessage {...commonProps} />
             )}
             {tool.outputFile && (
-              <Box
-                borderLeft={true}
-                borderRight={true}
-                borderTop={false}
-                borderBottom={false}
-                borderColor={borderColor}
-                borderDimColor={borderDimColor}
-                flexDirection="column"
-                borderStyle="round"
-                paddingLeft={1}
-                paddingRight={1}
-              >
-                <Box>
-                  <Text color={theme.text.primary}>
-                    Output too long and was saved to: {tool.outputFile}
-                  </Text>
-                </Box>
+              <Box flexDirection="column">
+                <Text color={theme.text.primary}>
+                  Output too long and was saved to: {tool.outputFile}
+                </Text>
               </Box>
             )}
           </Box>
         );
       })}
-      {/*
-          We have to keep the bottom border separate so it doesn't get
-          drawn over by the sticky header directly inside it.
-         */}
       {(visibleToolCalls.length > 0 || borderBottomOverride !== undefined) &&
         borderBottomOverride !== false &&
         (visibleToolCalls.length === 0 ||
           !visibleToolCalls.every((tool) => isTopicTool(tool.name))) && (
-          <Box
-            height={0}
-            width={contentWidth}
-            borderLeft={true}
-            borderRight={true}
-            borderTop={false}
-            borderBottom={borderBottomOverride ?? true}
-            borderColor={borderColor}
-            borderDimColor={borderDimColor}
-            borderStyle="round"
-          />
+          <Text color={theme.border.default}>
+            {'─'.repeat(Math.max(0, contentWidth))}
+          </Text>
         )}
     </Box>
   );

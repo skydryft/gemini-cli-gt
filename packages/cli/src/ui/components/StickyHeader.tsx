@@ -5,7 +5,7 @@
  */
 
 import type React from 'react';
-import { Box, type DOMElement } from 'ink';
+import { Box, Text, type DOMElement } from 'ink';
 import { theme } from '../semantic-colors.js';
 
 export interface StickyHeaderProps {
@@ -21,8 +21,8 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
   children,
   width,
   isFirst,
-  borderColor,
-  borderDimColor,
+  borderColor: _borderColor,
+  borderDimColor: _borderDimColor,
   containerRef,
 }) => (
   <Box
@@ -32,45 +32,21 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
     flexShrink={0}
     width={width}
     stickyChildren={
-      <Box
-        borderStyle="round"
-        flexDirection="column"
-        width={width}
-        opaque
-        borderColor={borderColor}
-        borderDimColor={borderDimColor}
-        borderBottom={false}
-        borderTop={isFirst}
-        paddingTop={isFirst ? 0 : 1}
-      >
-        <Box paddingX={1}>{children}</Box>
-        {/* Dark border to separate header from content. */}
-        <Box
-          width={width - 2}
-          borderColor={theme.ui.dark}
-          borderStyle="single"
-          borderTop={false}
-          borderBottom={true}
-          borderLeft={false}
-          borderRight={false}
-        ></Box>
+      <Box flexDirection="column" width={width} opaque>
+        <Text color={theme.border.default}>
+          {'─'.repeat(Math.max(0, width))}
+        </Text>
+        <Box>{children}</Box>
       </Box>
     }
   >
-    <Box
-      borderStyle="round"
-      width={width}
-      borderColor={borderColor}
-      borderDimColor={borderDimColor}
-      borderBottom={false}
-      borderTop={isFirst}
-      borderLeft={true}
-      borderRight={true}
-      paddingX={1}
-      paddingBottom={1}
-      paddingTop={isFirst ? 0 : 1}
-    >
-      {children}
+    <Box flexDirection="column" width={width}>
+      {isFirst && (
+        <Text color={theme.border.default}>
+          {'─'.repeat(Math.max(0, width))}
+        </Text>
+      )}
+      <Box>{children}</Box>
     </Box>
   </Box>
 );

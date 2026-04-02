@@ -34,9 +34,9 @@ export const SubagentGroupDisplay: React.FC<SubagentGroupDisplayProps> = ({
   toolCalls,
   availableTerminalHeight,
   terminalWidth,
-  borderColor,
-  borderDimColor,
-  isFirst,
+  borderColor: _borderColor,
+  borderDimColor: _borderDimColor,
+  isFirst: _isFirst,
   isExpandable = true,
 }) => {
   const isExpanded = availableTerminalHeight === undefined;
@@ -135,20 +135,7 @@ export const SubagentGroupDisplay: React.FC<SubagentGroupDisplayProps> = ({
   );
 
   return (
-    <Box
-      flexDirection="column"
-      width={terminalWidth}
-      borderLeft={true}
-      borderRight={true}
-      borderTop={isFirst}
-      borderBottom={false}
-      borderColor={borderColor}
-      borderDimColor={borderDimColor}
-      borderStyle="round"
-      paddingLeft={1}
-      paddingTop={0}
-      paddingBottom={0}
-    >
+    <Box flexDirection="column" width={terminalWidth}>
       <Box flexDirection="row" gap={1} marginBottom={isExpanded ? 1 : 0}>
         <Text color={theme.text.secondary}>≡</Text>
         <Text bold color={theme.text.primary}>

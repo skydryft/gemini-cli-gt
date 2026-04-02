@@ -17,8 +17,6 @@ interface ThinkingMessageProps {
   isFirstThinking?: boolean;
 }
 
-const THINKING_LEFT_PADDING = 1;
-
 function normalizeThoughtLines(thought: ThoughtSummary): string[] {
   const subject = normalizeEscapedNewlines(thought.subject).trim();
   const description = normalizeEscapedNewlines(thought.description).trim();
@@ -69,17 +67,7 @@ export const ThinkingMessage: React.FC<ThinkingMessageProps> = ({
         </Text>
       )}
 
-      <Box
-        marginLeft={THINKING_LEFT_PADDING}
-        paddingLeft={1}
-        borderStyle="single"
-        borderLeft={true}
-        borderRight={false}
-        borderTop={false}
-        borderBottom={false}
-        borderColor={theme.text.secondary}
-        flexDirection="column"
-      >
+      <Box paddingLeft={1} flexDirection="column">
         <Text> </Text>
         {fullLines.length > 0 && (
           <Text color={theme.text.primary} bold italic>

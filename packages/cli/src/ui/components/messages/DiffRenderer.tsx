@@ -129,15 +129,7 @@ export const DiffRenderer: React.FC<DiffRendererProps> = ({
     }
 
     if (parsedLines.length === 0) {
-      return (
-        <Box
-          borderStyle="round"
-          borderColor={semanticTheme.border.default}
-          padding={1}
-        >
-          <Text dimColor>No changes detected.</Text>
-        </Box>
-      );
+      return <Text dimColor>No changes detected.</Text>;
     }
     if (screenReaderEnabled) {
       return (
@@ -278,14 +270,9 @@ const renderDiffContent = (
       ) {
         acc.push(
           <Box key={`gap-${index}`}>
-            <Box
-              borderStyle="double"
-              borderLeft={false}
-              borderRight={false}
-              borderBottom={false}
-              width={terminalWidth}
-              borderColor={semanticTheme.text.secondary}
-            ></Box>
+            <Text color={semanticTheme.text.secondary}>
+              {'─'.repeat(Math.max(0, terminalWidth))}
+            </Text>
           </Box>,
         );
       }

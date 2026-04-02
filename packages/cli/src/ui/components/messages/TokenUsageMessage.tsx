@@ -32,7 +32,7 @@ export const TokenUsageMessage: React.FC<TokenUsageMessageProps> = ({
   const cacheStr = cached ? ` cached:${formatTokenCount(cached)}` : '';
 
   return (
-    <Box marginLeft={2}>
+    <Box marginLeft={0}>
       <Text dimColor color={theme.text.secondary}>
         {`↑${inputStr} ↓${outputStr}${cacheStr}`}
       </Text>
