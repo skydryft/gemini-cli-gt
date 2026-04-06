@@ -42,12 +42,12 @@ jobs:
 
       # Publish core first (cli depends on it)
       - name: Publish @skydryft/gemini-cli-core
-        run: npm publish --workspace packages/core --access restricted
+        run: npm publish --workspace packages/core --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Publish CLI package
       - name: Publish @skydryft/gemini-cli
-        run: npm publish --workspace packages/cli --access restricted
+        run: npm publish --workspace packages/cli --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
