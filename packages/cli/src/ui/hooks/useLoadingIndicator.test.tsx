@@ -241,6 +241,78 @@ describe('useLoadingIndicator', () => {
     expect(result.current.currentLoadingPhrase).toContain('Attempt 3/3');
   });
 
+  it('should include error message in retry phrase when error is provided (full verbosity)', async () => {
+    const retryStatus = {
+      model: 'gemini-pro',
+      attempt: 1,
+      maxAttempts: 5,
+      delayMs: 1000,
+      error: 'Rate limit exceeded',
+    };
+    const { result } = await renderLoadingIndicatorHook(
+      StreamingState.Responding,
+      false,
+      retryStatus,
+    );
+
+    expect(result.current.currentLoadingPhrase).toContain(
+      'Rate limit exceeded',
+    );
+    expect(result.current.currentLoadingPhrase).toContain('retrying');
+    expect(result.current.currentLoadingPhrase).toContain('Attempt 2/5');
+  });
+
+  it('should extract message from JSON error response in retry phrase', async () => {
+    const retryStatus = {
+      model: 'gemini-pro',
+      attempt: 1,
+      maxAttempts: 5,
+      delayMs: 1000,
+      error: JSON.stringify({
+        error: {
+          code: 429,
+          message:
+            'You have exhausted your capacity on this model. Your quota will reset after 48s.',
+          status: 'RESOURCE_EXHAUSTED',
+        },
+      }),
+    };
+    const { result } = await renderLoadingIndicatorHook(
+      StreamingState.Responding,
+      false,
+      retryStatus,
+    );
+
+    expect(result.current.currentLoadingPhrase).toContain(
+      'You have exhausted your capacity on this model.',
+    );
+    expect(result.current.currentLoadingPhrase).not.toContain('"error"');
+    expect(result.current.currentLoadingPhrase).not.toContain('"code"');
+  });
+
+  it('should include error message in low verbosity retry phrase when error is provided', async () => {
+    const retryStatus = {
+      model: 'gemini-pro',
+      attempt: 2,
+      maxAttempts: 5,
+      delayMs: 1000,
+      error: 'Rate limit exceeded',
+    };
+    const { result } = await renderLoadingIndicatorHook(
+      StreamingState.Responding,
+      false,
+      retryStatus,
+      true,
+      true,
+      'low',
+    );
+
+    expect(result.current.currentLoadingPhrase).toContain(
+      'Rate limit exceeded',
+    );
+    expect(result.current.currentLoadingPhrase).toContain('retrying');
+  });
+
   it('should not show retry status phrase when idle', async () => {
     const retryStatus = {
       model: 'gemini-pro',

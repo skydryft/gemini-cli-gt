@@ -2206,17 +2206,22 @@ Logging in with Google... Restarting Gemini CLI to continue.
 
   const maxLength = terminalWidth - estimatedStatusLength - 5;
 
-  const { elapsedTime, currentLoadingPhrase, currentTip, currentWittyPhrase } =
-    useLoadingIndicator({
-      streamingState,
-      shouldShowFocusHint,
-      retryStatus,
-      showTips: showStatusTips,
-      showWit: showStatusWit,
-      customWittyPhrases: settings.merged.ui.customWittyPhrases,
-      errorVerbosity: settings.merged.ui.errorVerbosity,
-      maxLength,
-    });
+  const {
+    elapsedTime,
+    currentLoadingPhrase,
+    retryPhrase,
+    currentTip,
+    currentWittyPhrase,
+  } = useLoadingIndicator({
+    streamingState,
+    shouldShowFocusHint,
+    retryStatus,
+    showTips: showStatusTips,
+    showWit: showStatusWit,
+    customWittyPhrases: settings.merged.ui.customWittyPhrases,
+    errorVerbosity: settings.merged.ui.errorVerbosity,
+    maxLength,
+  });
 
   const allowPlanMode =
     config.isPlanEnabled() &&
@@ -2414,6 +2419,7 @@ Logging in with Google... Restarting Gemini CLI to continue.
       isFocused,
       elapsedTime,
       currentLoadingPhrase,
+      retryPhrase,
       currentTip,
       currentWittyPhrase,
       historyRemountKey,
@@ -2534,6 +2540,7 @@ Logging in with Google... Restarting Gemini CLI to continue.
       isFocused,
       elapsedTime,
       currentLoadingPhrase,
+      retryPhrase,
       currentTip,
       currentWittyPhrase,
       historyRemountKey,

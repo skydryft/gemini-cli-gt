@@ -63,6 +63,7 @@ export const StatusNode: React.FC<{
   activeHooks: ActiveHook[];
   showLoadingIndicator: boolean;
   errorVerbosity: 'low' | 'full' | undefined;
+  retryLoadingPhrase?: string;
   onResize?: (width: number) => void;
 }> = ({
   showTips,
@@ -73,6 +74,7 @@ export const StatusNode: React.FC<{
   activeHooks,
   showLoadingIndicator,
   errorVerbosity,
+  retryLoadingPhrase,
   onResize,
 }) => {
   const observerRef = useRef<ResizeObserver | null>(null);
@@ -130,6 +132,11 @@ export const StatusNode: React.FC<{
       currentLoadingPhrase = GENERIC_WORKING_LABEL;
     }
   } else {
+    // Show retry error phrase (e.g. "Rate limit exceeded — retrying...")
+    // so users see the actual reason instead of just "Thinking..."
+    if (retryLoadingPhrase) {
+      currentLoadingPhrase = retryLoadingPhrase;
+    }
     // Sanitize thought subject to prevent terminal injection
     currentThought = thought
       ? { ...thought, subject: stripAnsi(thought.subject) }
@@ -269,6 +276,7 @@ export const StatusRow: React.FC<StatusRowProps> = ({
       errorVerbosity={
         settings.merged.ui.errorVerbosity as 'low' | 'full' | undefined
       }
+      retryLoadingPhrase={uiState.retryPhrase}
       onResize={onStatusResize}
     />
   );

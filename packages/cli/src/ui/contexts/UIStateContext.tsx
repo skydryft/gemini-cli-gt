@@ -161,6 +161,7 @@ export interface UIState {
   cleanUiDetailsVisible: boolean;
   elapsedTime: number;
   currentLoadingPhrase: string | undefined;
+  retryPhrase: string | undefined;
   currentTip: string | undefined;
   currentWittyPhrase: string | undefined;
   historyRemountKey: number;

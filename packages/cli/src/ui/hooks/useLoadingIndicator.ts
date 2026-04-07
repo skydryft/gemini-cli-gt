@@ -15,6 +15,23 @@ import {
 
 const LOW_VERBOSITY_RETRY_HINT_ATTEMPT_THRESHOLD = 2;
 
+/**
+ * Extracts a human-readable message from an error string that may be
+ * a raw JSON API response (e.g. `{"error":{"code":429,"message":"..."}}`).
+ */
+/**
+ * Extracts a human-readable message from an error string that may be
+ * a raw JSON API response (e.g. `{"error":{"code":429,"message":"..."}}`).
+ * Uses regex to avoid unsafe type assertions from JSON.parse.
+ */
+function extractErrorMessage(raw: string): string {
+  const match = /"message"\s*:\s*"([^"]+)"/.exec(raw);
+  if (match?.[1]) {
+    return match[1];
+  }
+  return raw;
+}
+
 export interface UseLoadingIndicatorProps {
   streamingState: StreamingState;
   shouldShowFocusHint: boolean;
@@ -79,13 +96,21 @@ export const useLoadingIndicator = ({
     prevStreamingStateRef.current = streamingState;
   }, [streamingState, elapsedTimeFromTimer]);
 
+  const retryErrorMessage = retryStatus?.error
+    ? extractErrorMessage(retryStatus.error)
+    : null;
+
   const retryPhrase =
     streamingState === StreamingState.Responding && retryStatus
       ? errorVerbosity === 'low'
         ? retryStatus.attempt >= LOW_VERBOSITY_RETRY_HINT_ATTEMPT_THRESHOLD
-          ? "This is taking a bit longer, we're still on it."
+          ? retryErrorMessage
+            ? `${retryErrorMessage} — retrying...`
+            : "This is taking a bit longer, we're still on it."
           : null
-        : `Trying to reach ${getDisplayString(retryStatus.model)} (Attempt ${retryStatus.attempt + 1}/${retryStatus.maxAttempts})`
+        : retryErrorMessage
+          ? `${retryErrorMessage} — retrying ${getDisplayString(retryStatus.model)} (Attempt ${retryStatus.attempt + 1}/${retryStatus.maxAttempts})`
+          : `Trying to reach ${getDisplayString(retryStatus.model)} (Attempt ${retryStatus.attempt + 1}/${retryStatus.maxAttempts})`
       : null;
 
   return {
@@ -94,6 +119,7 @@ export const useLoadingIndicator = ({
         ? retainedElapsedTime
         : elapsedTimeFromTimer,
     currentLoadingPhrase: retryPhrase || currentTip || currentWittyPhrase,
+    retryPhrase: retryPhrase ?? undefined,
     currentTip,
     currentWittyPhrase,
   };
