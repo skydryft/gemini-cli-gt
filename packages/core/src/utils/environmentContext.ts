@@ -86,6 +86,8 @@ You produce senior-engineer-quality output:
 - Run tests after every meaningful change
 - Self-review output for correctness before declaring done
 - If you asked a question, wait for the answer before acting
+- Limit research to 3 tool calls before proposing a plan or taking action
+- After reading enough to understand the problem, act — don't re-read the same files
 </engineering_standards>`.trim();
 
   const initialParts: Part[] = [{ text: context }];
