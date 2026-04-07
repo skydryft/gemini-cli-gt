@@ -16,9 +16,10 @@ import {
 } from 'vitest';
 import { randomUUID } from 'node:crypto';
 
-vi.mock('node:crypto', () => ({
-  randomUUID: vi.fn(),
-}));
+vi.mock('node:crypto', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:crypto')>();
+  return { ...actual, randomUUID: vi.fn() };
+});
 
 const runInDevTraceSpan = vi.hoisted(() =>
   vi.fn(async (opts, fn) => {
@@ -81,6 +82,7 @@ import {
 } from './types.js';
 import { GeminiCliOperation } from '../telemetry/constants.js';
 import type { EditorType } from '../utils/editor.js';
+import { ToolCallTracker } from '../core/toolCallTracker.js';
 
 describe('Scheduler Parallel Execution', () => {
   let scheduler: Scheduler;
@@ -218,6 +220,7 @@ describe('Scheduler Parallel Execution', () => {
       setApprovalMode: vi.fn(),
       getApprovalMode: vi.fn().mockReturnValue(ApprovalMode.DEFAULT),
       getTelemetryLogPromptsEnabled: vi.fn().mockReturnValue(false),
+      toolCallTracker: new ToolCallTracker(),
     } as unknown as Mocked<Config>;
 
     (mockConfig as unknown as { config: Config }).config = mockConfig as Config;

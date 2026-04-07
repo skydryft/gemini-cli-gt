@@ -310,6 +310,13 @@ export class AgentHistoryProvider {
   ): readonly Content[] {
     if (!summaryText) return messagesToKeep;
 
+    // Re-inject GEMINI.md content after compaction to preserve project conventions.
+    // This is critical: GEMINI.md instructions must survive all compaction levels.
+    const geminiMdContent = this.getGeminiMdContent();
+    if (geminiMdContent) {
+      summaryText = `${summaryText}\n\n<loaded_context>\nThe following is the project's GEMINI.md configuration (re-injected after context compaction to ensure project conventions are preserved):\n${geminiMdContent}\n</loaded_context>`;
+    }
+
     if (messagesToKeep.length === 0) {
       return [{ role: 'user', parts: [{ text: summaryText }] }];
     }
@@ -411,5 +418,29 @@ ${JSON.stringify(bridge)}`;
     }
 
     return summary;
+  }
+
+  /**
+   * Retrieves the current GEMINI.md content for re-injection after compaction.
+   * Returns empty string if not available.
+   */
+  private getGeminiMdContent(): string {
+    try {
+      const memory = this.config.getUserMemory();
+      if (typeof memory === 'string') {
+        return memory.trim();
+      }
+      // HierarchicalMemory — combine project + global context
+      const parts: string[] = [];
+      if (memory.global?.trim()) {
+        parts.push(memory.global.trim());
+      }
+      if (memory.project?.trim()) {
+        parts.push(memory.project.trim());
+      }
+      return parts.join('\n\n');
+    } catch {
+      return '';
+    }
   }
 }

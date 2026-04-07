@@ -73,7 +73,9 @@ export class MessageBus extends EventEmitter {
 
   async publish(message: Message): Promise<void> {
     if (this.debug) {
-      debugLogger.debug(`[MESSAGE_BUS] publish: ${safeJsonStringify(message)}`);
+      debugLogger.debug(
+        `[MESSAGE_BUS] publish: ${safeJsonStringify(sanitizeMessageForLog(message))}`,
+      );
     }
     try {
       if (!this.isValidMessage(message)) {
@@ -198,4 +200,39 @@ export class MessageBus extends EventEmitter {
       this.publish({ ...request, correlationId } as TRequest);
     });
   }
+}
+
+/**
+ * Creates a lightweight copy of a message for debug logging,
+ * stripping verbose fields (tool descriptions, parameter schemas)
+ * that add noise without diagnostic value.
+ */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && value !== undefined && value.constructor === Object;
+}
+
+function sanitizeMessageForLog(message: Message): unknown {
+  if (message.type !== MessageBusType.TOOL_CALLS_UPDATE) {
+    return message;
+  }
+  const msg = message as Message & {
+    toolCalls?: Array<Record<string, unknown>>;
+  };
+  if (!msg.toolCalls) return message;
+  return {
+    ...msg,
+    toolCalls: msg.toolCalls.map((tc) => {
+      if (!('tool' in tc) || tc['tool'] == null) return tc;
+      const tool = tc['tool'];
+      if (!isRecord(tool)) return tc;
+      return {
+        ...tc,
+        tool: {
+          name: tool['name'],
+          displayName: tool['displayName'],
+          kind: tool['kind'],
+        },
+      };
+    }),
+  };
 }

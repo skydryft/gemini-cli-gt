@@ -32,6 +32,21 @@ const CONTENT_CHUNK_SIZE = 50;
 const MAX_HISTORY_LENGTH = 5000;
 
 /**
+ * Threshold for consecutive content-only chunks (no tool calls between them)
+ * that trigger thinking-leak detection. This catches the model producing
+ * reasoning output ("Wait!", "Let me think again") without taking action.
+ * Set high enough to avoid false positives on normal lengthy responses.
+ */
+const THINKING_LEAK_THRESHOLD = 10;
+
+/**
+ * Token count threshold: if the model produces this many content tokens
+ * in a row without a tool call, flag it as a thinking leak.
+ * ~4000 tokens ≈ ~16000 characters of reasoning without any action.
+ */
+const THINKING_LEAK_TOKEN_THRESHOLD = 4000;
+
+/**
  * The number of recent conversation turns to include in the history when asking the LLM to check for a loop.
  */
 const LLM_LOOP_CHECK_HISTORY_COUNT = 20;
@@ -149,6 +164,11 @@ export class LoopDetectionService {
   private inCodeBlock = false;
 
   private lastLoopType?: LoopType;
+
+  // Thinking-leak detection: tracks consecutive content chunks without tool calls
+  private consecutiveContentChunks = 0;
+  private consecutiveContentTokenEstimate = 0;
+
   // LLM loop track tracking
   private turnsInCurrentPrompt = 0;
   private llmCheckInterval = DEFAULT_LLM_CHECK_INTERVAL;
@@ -206,6 +226,9 @@ export class LoopDetectionService {
         // content chanting only happens in one single stream, reset if there
         // is a tool call in between
         this.resetContentTracking();
+        // Reset thinking-leak counter when a tool call is made
+        this.consecutiveContentChunks = 0;
+        this.consecutiveContentTokenEstimate = 0;
         isLoop = this.checkToolCallLoop(event.value);
         if (isLoop) {
           detail = `Repeated tool call: ${event.value.name} with arguments ${JSON.stringify(event.value.args)}`;
@@ -216,6 +239,13 @@ export class LoopDetectionService {
         if (isLoop) {
           detail = `Repeating content detected: "${this.streamContentHistory.substring(Math.max(0, this.lastContentIndex - 20), this.lastContentIndex + CONTENT_CHUNK_SIZE).trim()}..."`;
         }
+        // Thinking-leak detection: track consecutive content without tool calls
+        if (!isLoop) {
+          isLoop = this.checkThinkingLeak(event.value);
+          if (isLoop) {
+            detail = `Thinking leak detected: producing extensive reasoning output (${this.consecutiveContentTokenEstimate} estimated tokens) without taking any tool action. Make a tool call now or provide your final answer.`;
+          }
+        }
         break;
       default:
         break;
@@ -225,10 +255,13 @@ export class LoopDetectionService {
       this.loopDetected = true;
       this.detectedCount++;
       this.lastLoopDetail = detail;
-      this.lastLoopType =
-        event.type === GeminiEventType.ToolCallRequest
-          ? LoopType.CONSECUTIVE_IDENTICAL_TOOL_CALLS
-          : LoopType.CONTENT_CHANTING_LOOP;
+      if (event.type === GeminiEventType.ToolCallRequest) {
+        this.lastLoopType = LoopType.CONSECUTIVE_IDENTICAL_TOOL_CALLS;
+      } else if (detail && detail.startsWith('Thinking leak')) {
+        this.lastLoopType = LoopType.THINKING_LEAK;
+      } else {
+        this.lastLoopType = LoopType.CONTENT_CHANTING_LOOP;
+      }
 
       logLoopDetected(
         this.context.config,
@@ -320,6 +353,25 @@ export class LoopDetectionService {
       this.toolCallRepetitionCount = 1;
     }
     if (this.toolCallRepetitionCount >= TOOL_CALL_LOOP_THRESHOLD) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Detects thinking-leak patterns: the model producing extensive reasoning
+   * content (e.g., "Wait!", "Let me think again", "I'll do it.") without
+   * making any tool calls. This wastes tokens and indicates the model is stuck.
+   */
+  private checkThinkingLeak(content: string): boolean {
+    this.consecutiveContentChunks++;
+    // Rough token estimate: ~4 chars per token
+    this.consecutiveContentTokenEstimate += Math.ceil(content.length / 4);
+
+    if (
+      this.consecutiveContentChunks >= THINKING_LEAK_THRESHOLD &&
+      this.consecutiveContentTokenEstimate >= THINKING_LEAK_TOKEN_THRESHOLD
+    ) {
       return true;
     }
     return false;
@@ -724,6 +776,8 @@ export class LoopDetectionService {
     this.resetToolCallCount();
     this.resetContentTracking();
     this.resetLlmCheckTracking();
+    this.consecutiveContentChunks = 0;
+    this.consecutiveContentTokenEstimate = 0;
     this.loopDetected = false;
     this.detectedCount = 0;
     this.lastLoopDetail = undefined;

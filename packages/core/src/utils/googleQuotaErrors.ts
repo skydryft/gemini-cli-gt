@@ -251,7 +251,9 @@ export function classifyGoogleError(error: unknown): unknown {
     const errorMessage =
       googleApiError?.message ||
       (error instanceof Error ? error.message : String(error));
-    const match = errorMessage.match(/Please retry in ([0-9.]+(?:ms|s))/);
+    const match =
+      errorMessage.match(/Please retry in ([0-9.]+(?:ms|s))/) ||
+      errorMessage.match(/quota will reset after ([0-9.]+s)/);
     if (match?.[1]) {
       const retryDelaySeconds = parseDurationInSeconds(match[1]);
       if (retryDelaySeconds !== null) {
@@ -317,6 +319,22 @@ export function classifyGoogleError(error: unknown): unknown {
     }
   }
 
+  // The human-readable message often contains the actual quota reset window
+  // (e.g., "Your quota will reset after 50s") which may be longer than the
+  // RetryInfo.retryDelay. Use whichever is longer as the authoritative delay.
+  const messageDelayMatch = googleApiError.message.match(
+    /quota will reset after ([0-9.]+s)/,
+  );
+  if (messageDelayMatch?.[1]) {
+    const messageDelay = parseDurationInSeconds(messageDelayMatch[1]);
+    if (
+      messageDelay !== null &&
+      (delaySeconds === undefined || messageDelay > delaySeconds)
+    ) {
+      delaySeconds = messageDelay;
+    }
+  }
+
   if (errorInfo) {
     // INSUFFICIENT_G1_CREDITS_BALANCE is always terminal, regardless of domain
     if (errorInfo.reason === 'INSUFFICIENT_G1_CREDITS_BALANCE') {
@@ -348,6 +366,17 @@ export function classifyGoogleError(error: unknown): unknown {
           );
         }
         if (errorInfo.reason === 'QUOTA_EXHAUSTED') {
+          // If the server provides a short retry delay (<=60s), this is a
+          // transient per-request rate limit, not permanent quota exhaustion.
+          // Classify as retryable so the retry loop waits the server-specified
+          // duration instead of triggering the fallback handler loop.
+          if (delaySeconds !== undefined && delaySeconds <= 60) {
+            return new RetryableQuotaError(
+              `${googleApiError.message}`,
+              googleApiError,
+              delaySeconds,
+            );
+          }
           return new TerminalQuotaError(
             `${googleApiError.message}`,
             googleApiError,

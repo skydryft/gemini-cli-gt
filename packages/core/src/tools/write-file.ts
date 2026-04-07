@@ -331,6 +331,12 @@ class WriteFileToolInvocation extends BaseToolInvocation<
         .getFileSystemService()
         .writeTextFile(this.resolvedPath, finalContent);
 
+      // Update file state cache so subsequent edits know the file's current state
+      this.config.fileStateCache.recordWrite(
+        this.resolvedPath,
+        finalContent.replace(/\r\n/g, '\n'),
+      );
+
       // Generate diff for display result
       const fileName = path.basename(this.resolvedPath);
       // If there was a readError, originalContent in correctedContentResult is '',

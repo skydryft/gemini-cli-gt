@@ -793,6 +793,7 @@ export enum LoopType {
   CONSECUTIVE_IDENTICAL_TOOL_CALLS = 'consecutive_identical_tool_calls',
   CHANTING_IDENTICAL_SENTENCES = 'chanting_identical_sentences',
   LLM_DETECTED_LOOP = 'llm_detected_loop',
+  THINKING_LEAK = 'thinking_leak',
   // Aliases for tests/internal use
   TOOL_CALL_LOOP = CONSECUTIVE_IDENTICAL_TOOL_CALLS,
   CONTENT_CHANTING_LOOP = CHANTING_IDENTICAL_SENTENCES,

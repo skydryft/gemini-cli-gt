@@ -49,6 +49,7 @@ import {
   type McpProgressPayload,
 } from '../utils/events.js';
 import { GeminiCliOperation } from '../telemetry/constants.js';
+import { createHash } from 'node:crypto';
 
 interface SchedulerQueueItem {
   requests: ToolCallRequestInfo[];
@@ -906,26 +907,93 @@ export class Scheduler {
       }
     }
 
+    // Track tool call outcome for pattern detection
+    const tracker = this.config.toolCallTracker;
+    const argsHash = createHash('sha256')
+      .update(JSON.stringify(toolCall.request.args))
+      .digest('hex');
+    const succeeded = result.status === CoreToolCallStatus.Success;
+    tracker.record(
+      toolCall.request.name,
+      argsHash,
+      succeeded,
+      result.response?.error?.message,
+    );
+
+    // Check for problematic patterns and inject strategy guidance if needed
+    let responseToUse = result.response;
+    const patternResult = tracker.checkPatterns();
+    if (patternResult.detected && patternResult.suggestion) {
+      responseToUse = this._appendStrategyGuidance(
+        result.response,
+        toolCall.request.name,
+        patternResult.suggestion,
+      );
+    }
+
     if (result.status === CoreToolCallStatus.Success) {
       this.state.updateStatus(
         callId,
         CoreToolCallStatus.Success,
-        result.response,
+        responseToUse,
       );
     } else if (result.status === CoreToolCallStatus.Cancelled) {
       this.state.updateStatus(
         callId,
         CoreToolCallStatus.Cancelled,
-        result.response,
+        responseToUse,
       );
     } else {
-      this.state.updateStatus(
-        callId,
-        CoreToolCallStatus.Error,
-        result.response,
-      );
+      this.state.updateStatus(callId, CoreToolCallStatus.Error, responseToUse);
     }
     return false;
+  }
+
+  /**
+   * Appends strategy-switching guidance to a tool response when the
+   * ToolCallTracker detects a problematic pattern (e.g., repeated failures).
+   * The guidance is injected into the functionResponse so the model sees it.
+   */
+  private _appendStrategyGuidance(
+    response: ToolCallResponseInfo,
+    toolName: string,
+    suggestion: string,
+  ): ToolCallResponseInfo {
+    const guidanceText = `\n\n[STRATEGY GUIDANCE]: ${suggestion}`;
+
+    // Clone response parts and append guidance to the function response
+    const newParts = response.responseParts.map((part) => {
+      if (part.functionResponse) {
+        const existingResponse = part.functionResponse.response ?? {};
+        const responseObj =
+          typeof existingResponse === 'object'
+            ? (existingResponse)
+            : {};
+        const existingOutput =
+          'output' in responseObj
+            ? String(responseObj['output'])
+            : 'error' in responseObj
+              ? String(responseObj['error'])
+              : JSON.stringify(existingResponse);
+
+        const newResponse: Record<string, unknown> = {};
+        for (const key of Object.keys(responseObj)) {
+          newResponse[key] = responseObj[key];
+        }
+        newResponse['output'] = existingOutput + guidanceText;
+        return {
+          functionResponse: Object.assign({}, part.functionResponse, {
+            response: newResponse,
+          }),
+        };
+      }
+      return part;
+    });
+
+    return {
+      ...response,
+      responseParts: newParts,
+    };
   }
 
   private _processNextInRequestQueue() {

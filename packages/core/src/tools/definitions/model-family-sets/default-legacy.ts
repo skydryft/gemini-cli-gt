@@ -346,7 +346,7 @@ export const DEFAULT_LEGACY_SET: CoreToolSet = {
 
   replace: {
     name: EDIT_TOOL_NAME,
-    description: `Replaces text within a file. By default, the tool expects to find and replace exactly ONE occurrence of \`old_string\`. If you want to replace multiple occurrences of the exact same string, set \`allow_multiple\` to true. This tool requires providing significant context around the change to ensure precise targeting. Always use the ${READ_FILE_TOOL_NAME} tool to examine the file's current content before attempting a text replacement.
+    description: `Replaces text within a file. By default, the tool expects to find and replace exactly ONE occurrence of \`old_string\`. If you want to replace multiple occurrences of the exact same string, set \`allow_multiple\` to true. This tool requires providing significant context around the change to ensure precise targeting. IMPORTANT: You MUST call ${READ_FILE_TOOL_NAME} on a file before using this tool to edit it. The tool will FAIL if you haven't read the file first. This is enforced — not optional.
       
       The user has the ability to modify the \`new_string\` content. If modified, this will be stated in the response.
       

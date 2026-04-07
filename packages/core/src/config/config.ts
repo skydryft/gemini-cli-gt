@@ -28,6 +28,8 @@ import type { OverageStrategy } from '../billing/billing.js';
 import { PromptRegistry } from '../prompts/prompt-registry.js';
 import { ResourceRegistry } from '../resources/resource-registry.js';
 import { ToolRegistry } from '../tools/tool-registry.js';
+import { FileStateCache } from '../tools/file-state-cache.js';
+import { ToolCallTracker } from '../core/toolCallTracker.js';
 import { LSTool } from '../tools/ls.js';
 import { ReadFileTool } from '../tools/read-file.js';
 import { GrepTool } from '../tools/grep.js';
@@ -747,6 +749,8 @@ export class Config implements McpContext, AgentLoopContext {
   private fileSystemService: FileSystemService;
   private trackerService?: TrackerService;
   readonly topicState = new TopicState();
+  readonly fileStateCache = new FileStateCache();
+  readonly toolCallTracker = new ToolCallTracker();
   private contentGeneratorConfig!: ContentGeneratorConfig;
   private contentGenerator!: ContentGenerator;
   readonly modelConfigService: ModelConfigService;

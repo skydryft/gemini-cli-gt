@@ -386,6 +386,13 @@ export function renderOperationalGuidelines(
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use ${formatToolName(EDIT_TOOL_NAME)} (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use ${formatToolName(WRITE_FILE_TOOL_NAME)} (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use ${formatToolName(SHELL_TOOL_NAME)} for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the ${formatToolName(EDIT_TOOL_NAME)} tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the ${formatToolName(SHELL_TOOL_NAME)} tool for running shell commands, remembering the safety rule to explain modifying commands first.${toolUsageInteractive(

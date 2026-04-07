@@ -645,11 +645,50 @@ export class GeminiClient {
     );
 
     if (estimatedRequestTokenCount > remainingTokenCount) {
-      yield {
-        type: GeminiEventType.ContextWindowWillOverflow,
-        value: { estimatedRequestTokenCount, remainingTokenCount },
-      };
-      return turn;
+      // Circuit breaker: attempt emergency history truncation before giving up.
+      // Drop the oldest 50% of conversation history and retry the check.
+      const history = this.getHistory();
+      if (history.length > 4) {
+        const halfPoint = Math.ceil(history.length / 2);
+        const truncatedHistory = history.slice(halfPoint);
+        this.getChat().setHistory(truncatedHistory);
+
+        debugLogger.warn(
+          `Circuit breaker: emergency truncation dropped ${halfPoint} messages (${history.length} → ${truncatedHistory.length}).`,
+        );
+
+        // Re-check after truncation
+        const newRemainingTokenCount =
+          tokenLimit(modelForLimitCheck) -
+          this.getChat().getLastPromptTokenCount();
+        if (estimatedRequestTokenCount <= newRemainingTokenCount) {
+          // Truncation freed enough space — continue normally
+          yield {
+            type: GeminiEventType.ChatCompressed,
+            value: {
+              originalTokenCount: history.length,
+              newTokenCount: truncatedHistory.length,
+              compressionStatus: CompressionStatus.CONTENT_TRUNCATED,
+            },
+          };
+        } else {
+          // Still not enough space — give up
+          yield {
+            type: GeminiEventType.ContextWindowWillOverflow,
+            value: {
+              estimatedRequestTokenCount,
+              remainingTokenCount: newRemainingTokenCount,
+            },
+          };
+          return turn;
+        }
+      } else {
+        yield {
+          type: GeminiEventType.ContextWindowWillOverflow,
+          value: { estimatedRequestTokenCount, remainingTokenCount },
+        };
+        return turn;
+      }
     }
 
     // Prevent context updates from being sent while a tool call is
@@ -677,6 +716,41 @@ export class GeminiClient {
       }
       this.lastSentIdeContext = newIdeContext;
       this.forceFullIdeContext = false;
+    }
+
+    // Inject task state periodically to prevent context amnesia.
+    // Every 5 turns (or on the first turn), inject a summary of active tasks
+    // so the model doesn't lose track of multi-step workflows.
+    if (
+      !hasPendingToolCall &&
+      typeof this.config.isTrackerEnabled === 'function' &&
+      this.config.isTrackerEnabled() &&
+      this.sessionTurnCount % 5 === 1
+    ) {
+      try {
+        const tasks = await this.config.getTrackerService().listTasks();
+        const activeTasks = tasks.filter(
+          (t) => t.status === 'open' || t.status === 'in_progress',
+        );
+        if (activeTasks.length > 0) {
+          const taskSummary = activeTasks
+            .map(
+              (t) =>
+                `- [${t.status.toUpperCase()}] ${t.id}: ${t.title}${t.description ? ` — ${t.description}` : ''}`,
+            )
+            .join('\n');
+          this.getChat().addHistory({
+            role: 'user',
+            parts: [
+              {
+                text: `<task_state>\nCurrent active tasks:\n${taskSummary}\n\nReview this task list before taking action. Update task status as you make progress. Do not repeat completed work.\n</task_state>`,
+              },
+            ],
+          });
+        }
+      } catch {
+        // Non-fatal: if tracker is unavailable, don't block the turn
+      }
     }
 
     // Re-initialize turn with fresh history
@@ -1257,7 +1331,21 @@ export class GeminiClient {
     // Clear the detection flag so the recursive turn can proceed, but the count remains 1.
     this.loopDetector.clearDetection();
 
-    const feedbackText = `System: Potential loop detected. Details: ${loopResult.detail || 'Repetitive patterns identified'}. Please take a step back and confirm you're making forward progress. If not, take a step back, analyze your previous actions and rethink how you're approaching the problem. Avoid repeating the same tool calls or responses without new results.`;
+    // Check if the ToolCallTracker has specific strategy guidance to include
+    const trackerPattern = this.config.toolCallTracker.checkPatterns();
+    const strategyGuidance =
+      trackerPattern.detected && trackerPattern.suggestion
+        ? `\n\nSpecific guidance: ${trackerPattern.suggestion}`
+        : '';
+
+    const feedbackText = `System: Potential loop detected. Details: ${loopResult.detail || 'Repetitive patterns identified'}. You MUST change your approach now. Do NOT repeat the same tool calls or patterns.
+
+Action required:
+1. Stop and analyze what has gone wrong in your previous attempts.
+2. Try a fundamentally different strategy — use different tools or different arguments.
+3. If an edit keeps failing, read the file first to verify its current contents.
+4. If a command keeps failing, check the error message carefully and fix the root cause.
+5. If you are stuck, explain to the user what you've tried and ask for guidance.${strategyGuidance}`;
 
     if (this.config.getDebugMode()) {
       debugLogger.warn(

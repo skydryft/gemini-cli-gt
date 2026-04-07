@@ -10,6 +10,7 @@ const mockFixLLMEditWithInstruction = vi.hoisted(() => vi.fn());
 const mockGenerateJson = vi.hoisted(() => vi.fn());
 const mockOpenDiff = vi.hoisted(() => vi.fn());
 
+import { FileStateCache } from './file-state-cache.js';
 import { IdeClient } from '../ide/ide-client.js';
 
 vi.mock('../ide/ide-client.js', () => ({
@@ -82,6 +83,23 @@ describe('EditTool', () => {
   let fileSystemService: StandardFileSystemService;
   let baseLlmClient: BaseLlmClient;
 
+  /**
+   * Write a test file and record it in the file state cache so that
+   * read-before-edit enforcement passes during tests.
+   */
+  function writeTestFile(
+    filePath: string,
+    content: string,
+    encoding?: BufferEncoding,
+  ): void {
+    fs.writeFileSync(filePath, content, encoding ?? 'utf8');
+    // Record the read with normalized content (matching edit tool behavior)
+    mockConfig.fileStateCache.recordRead(
+      filePath,
+      content.replace(/\r\n/g, '\n'),
+    );
+  }
+
   beforeEach(() => {
     vi.restoreAllMocks();
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'edit-tool-test-'));
@@ -100,6 +118,7 @@ describe('EditTool', () => {
     fileSystemService = new StandardFileSystemService();
 
     mockConfig = {
+      fileStateCache: new FileStateCache(),
       getUsageStatisticsEnabled: vi.fn(() => true),
       getSessionId: vi.fn(() => 'mock-session-id'),
       getContentGeneratorConfig: vi.fn(() => ({ authType: 'mock' })),
@@ -705,7 +724,7 @@ function doIt() {
     it('should edit an existing file and return diff with fileName', async () => {
       const initialContent = 'This is some old text.';
       const newContent = 'This is some new text.';
-      fs.writeFileSync(filePath, initialContent, 'utf8');
+      writeTestFile(filePath, initialContent, 'utf8');
       const params: EditToolParams = {
         file_path: filePath,
         instruction: 'Replace old with new',
@@ -725,7 +744,7 @@ function doIt() {
     });
 
     it('should return error if old_string is not found in file', async () => {
-      fs.writeFileSync(filePath, 'Some content.', 'utf8');
+      writeTestFile(filePath, 'Some content.', 'utf8');
 
       // Enable LLM correction for this test
       (mockConfig.getDisableLLMCorrection as Mock).mockReturnValue(false);
@@ -748,7 +767,7 @@ function doIt() {
     it('should succeed if FixLLMEditWithInstruction corrects the params', async () => {
       const initialContent = 'This is some original text.';
       const finalContent = 'This is some brand new text.';
-      fs.writeFileSync(filePath, initialContent, 'utf8');
+      writeTestFile(filePath, initialContent, 'utf8');
 
       // Enable LLM correction for this test
       (mockConfig.getDisableLLMCorrection as Mock).mockReturnValue(false);
@@ -779,7 +798,7 @@ function doIt() {
     it('should preserve CRLF line endings when editing a file', async () => {
       const initialContent = 'line one\r\nline two\r\n';
       const newContent = 'line one\r\nline three\r\n';
-      fs.writeFileSync(filePath, initialContent, 'utf8');
+      writeTestFile(filePath, initialContent, 'utf8');
       const params: EditToolParams = {
         file_path: filePath,
         instruction: 'Replace two with three',
@@ -812,7 +831,7 @@ function doIt() {
 
     it('should return NO_CHANGE if FixLLMEditWithInstruction determines no changes are needed', async () => {
       const initialContent = 'The price is $100.';
-      fs.writeFileSync(filePath, initialContent, 'utf8');
+      writeTestFile(filePath, initialContent, 'utf8');
 
       // Enable LLM correction for this test
       (mockConfig.getDisableLLMCorrection as Mock).mockReturnValue(false);
@@ -856,7 +875,7 @@ function doIt() {
       const initialContent = 'This is the original content.';
       const externallyModifiedContent =
         'This is the externally modified content.';
-      fs.writeFileSync(filePath, initialContent, 'utf8');
+      writeTestFile(filePath, initialContent, 'utf8');
 
       // Enable LLM correction for this test
       (mockConfig.getDisableLLMCorrection as Mock).mockReturnValue(false);
@@ -872,14 +891,15 @@ function doIt() {
       // Spy on `readTextFile` to simulate an external file change between reads.
       const readTextFileSpy = vi
         .spyOn(fileSystemService, 'readTextFile')
-        .mockResolvedValueOnce(initialContent) // First call in `calculateEdit`
-        .mockResolvedValueOnce(externallyModifiedContent); // Second call in `attemptSelfCorrection`
+        .mockResolvedValueOnce(initialContent) // First call: read-before-edit enforcement check
+        .mockResolvedValueOnce(initialContent) // Second call in `calculateEdit`
+        .mockResolvedValueOnce(externallyModifiedContent); // Third call in `attemptSelfCorrection`
 
       const invocation = tool.build(params);
       await invocation.execute(new AbortController().signal);
 
-      // Assert that the file was read twice (initial read, then re-read for hash comparison).
-      expect(readTextFileSpy).toHaveBeenCalledTimes(2);
+      // Assert that the file was read three times (enforcement check, calculateEdit, self-correction re-read).
+      expect(readTextFileSpy).toHaveBeenCalledTimes(3);
 
       // Assert that the self-correction LLM was called with the updated content and a specific message.
       expect(mockFixLLMEditWithInstruction).toHaveBeenCalledWith(
@@ -913,19 +933,19 @@ function doIt() {
       },
       {
         name: 'ATTEMPT_TO_CREATE_EXISTING_FILE',
-        setup: (fp: string) => fs.writeFileSync(fp, 'existing content', 'utf8'),
+        setup: (fp: string) => writeTestFile(fp, 'existing content', 'utf8'),
         params: { old_string: '', new_string: 'new content' },
         expectedError: ToolErrorType.ATTEMPT_TO_CREATE_EXISTING_FILE,
       },
       {
         name: 'NO_OCCURRENCE_FOUND',
-        setup: (fp: string) => fs.writeFileSync(fp, 'content', 'utf8'),
+        setup: (fp: string) => writeTestFile(fp, 'content', 'utf8'),
         params: { old_string: 'not-found', new_string: 'new' },
         expectedError: ToolErrorType.EDIT_NO_OCCURRENCE_FOUND,
       },
       {
         name: 'EXPECTED_OCCURRENCE_MISMATCH',
-        setup: (fp: string) => fs.writeFileSync(fp, 'one one two', 'utf8'),
+        setup: (fp: string) => writeTestFile(fp, 'one one two', 'utf8'),
         params: { old_string: 'one', new_string: 'new' },
         expectedError: ToolErrorType.EDIT_EXPECTED_OCCURRENCE_MISMATCH,
       },
@@ -1011,7 +1031,7 @@ function doIt() {
         finalContent,
         expectedError,
       }) => {
-        fs.writeFileSync(filePath, content, 'utf8');
+        writeTestFile(filePath, content, 'utf8');
         const params: EditToolParams = {
           file_path: filePath,
           instruction: 'Replace all foo with bar',
@@ -1052,7 +1072,7 @@ function doIt() {
       const initialContent = 'some old content here';
       const newContent = 'some new content here';
       const modifiedContent = 'some modified content here';
-      fs.writeFileSync(filePath, initialContent);
+      writeTestFile(filePath, initialContent);
       const params: EditToolParams = {
         file_path: filePath,
         instruction: 'test',
@@ -1144,7 +1164,7 @@ function doIt() {
         );
         const toRemove = linesToRemove.join('\n') + '\n';
 
-        fs.writeFileSync(filePath, content, 'utf8');
+        writeTestFile(filePath, content, 'utf8');
         files.push({
           path: filePath,
           initialContent: content,
@@ -1202,7 +1222,7 @@ function doIt() {
   describe('disableLLMCorrection', () => {
     it('should NOT call FixLLMEditWithInstruction when disableLLMCorrection is true', async () => {
       const filePath = path.join(rootDir, 'disable_llm_test.txt');
-      fs.writeFileSync(filePath, 'Some content.', 'utf8');
+      writeTestFile(filePath, 'Some content.', 'utf8');
 
       // Enable the setting
       (mockConfig.getDisableLLMCorrection as Mock).mockReturnValue(true);
@@ -1223,7 +1243,7 @@ function doIt() {
 
     it('should call FixLLMEditWithInstruction when disableLLMCorrection is false', async () => {
       const filePath = path.join(rootDir, 'enable_llm_test.txt');
-      fs.writeFileSync(filePath, 'Some content.', 'utf8');
+      writeTestFile(filePath, 'Some content.', 'utf8');
 
       // Now explicit as it's not the default anymore
       (mockConfig.getDisableLLMCorrection as Mock).mockReturnValue(false);
@@ -1255,7 +1275,7 @@ function doIt() {
 
       const filePath = path.join(rootDir, 'jit-edit-test.txt');
       const initialContent = 'some old text here';
-      fs.writeFileSync(filePath, initialContent, 'utf8');
+      writeTestFile(filePath, initialContent, 'utf8');
 
       const params: EditToolParams = {
         file_path: filePath,
@@ -1284,7 +1304,7 @@ function doIt() {
 
       const filePath = path.join(rootDir, 'jit-disabled-edit-test.txt');
       const initialContent = 'some old text here';
-      fs.writeFileSync(filePath, initialContent, 'utf8');
+      writeTestFile(filePath, initialContent, 'utf8');
 
       const params: EditToolParams = {
         file_path: filePath,
@@ -1319,7 +1339,7 @@ function doIt() {
       const filePath = path.join(rootDir, 'test-file.txt');
       const planFilePath = path.join(plansDir, 'test-file.txt');
       const initialContent = 'some initial content';
-      fs.writeFileSync(planFilePath, initialContent, 'utf8');
+      writeTestFile(planFilePath, initialContent, 'utf8');
 
       const params: EditToolParams = {
         file_path: filePath,
@@ -1337,6 +1357,118 @@ function doIt() {
       expect(fs.readFileSync(planFilePath, 'utf8')).toBe('some new content');
 
       fs.rmSync(plansDir, { recursive: true, force: true });
+    });
+  });
+
+  describe('read-before-edit enforcement', () => {
+    const testFile = 'read_before_edit_test.txt';
+    let testFilePath: string;
+
+    beforeEach(() => {
+      testFilePath = path.join(rootDir, testFile);
+    });
+
+    it('should reject edit when file has not been read first', async () => {
+      // Write file directly (not via writeTestFile) to avoid recording in cache
+      fs.writeFileSync(testFilePath, 'original content', 'utf8');
+
+      const params: EditToolParams = {
+        file_path: testFilePath,
+        instruction: 'Replace original with new',
+        old_string: 'original',
+        new_string: 'new',
+      };
+
+      const invocation = tool.build(params);
+      const result = await invocation.execute(new AbortController().signal);
+
+      expect(result.error).toBeDefined();
+      expect(result.error?.type).toBe(ToolErrorType.EDIT_PREPARATION_FAILURE);
+      expect(result.llmContent).toContain('must call read_file');
+    });
+
+    it('should allow edit when file has been read first', async () => {
+      writeTestFile(testFilePath, 'original content', 'utf8');
+
+      const params: EditToolParams = {
+        file_path: testFilePath,
+        instruction: 'Replace original with new',
+        old_string: 'original',
+        new_string: 'new',
+      };
+
+      const invocation = tool.build(params);
+      const result = await invocation.execute(new AbortController().signal);
+
+      expect(result.error).toBeUndefined();
+      expect(fs.readFileSync(testFilePath, 'utf8')).toBe('new content');
+    });
+
+    it('should reject edit when file has been modified externally since last read', async () => {
+      writeTestFile(testFilePath, 'original content', 'utf8');
+
+      // Simulate external modification after read
+      fs.writeFileSync(testFilePath, 'externally modified content', 'utf8');
+
+      const params: EditToolParams = {
+        file_path: testFilePath,
+        instruction: 'Replace original with new',
+        old_string: 'original',
+        new_string: 'new',
+      };
+
+      const invocation = tool.build(params);
+      const result = await invocation.execute(new AbortController().signal);
+
+      expect(result.error).toBeDefined();
+      expect(result.error?.type).toBe(ToolErrorType.EDIT_PREPARATION_FAILURE);
+      expect(result.llmContent).toContain(
+        'has been modified since your last read',
+      );
+    });
+
+    it('should allow new file creation without prior read', async () => {
+      const newFilePath = path.join(rootDir, 'brand_new_file.txt');
+
+      const params: EditToolParams = {
+        file_path: newFilePath,
+        instruction: 'Create new file',
+        old_string: '',
+        new_string: 'brand new content',
+      };
+
+      const invocation = tool.build(params);
+      const result = await invocation.execute(new AbortController().signal);
+
+      expect(result.error).toBeUndefined();
+      expect(fs.readFileSync(newFilePath, 'utf8')).toBe('brand new content');
+    });
+
+    it('should allow subsequent edits after a successful edit (cache updated on write)', async () => {
+      writeTestFile(testFilePath, 'first content here', 'utf8');
+
+      // First edit
+      const params1: EditToolParams = {
+        file_path: testFilePath,
+        instruction: 'Replace first with second',
+        old_string: 'first',
+        new_string: 'second',
+      };
+      const invocation1 = tool.build(params1);
+      const result1 = await invocation1.execute(new AbortController().signal);
+      expect(result1.error).toBeUndefined();
+
+      // Second edit should work without re-reading (cache was updated on write)
+      const params2: EditToolParams = {
+        file_path: testFilePath,
+        instruction: 'Replace second with third',
+        old_string: 'second',
+        new_string: 'third',
+      };
+      const invocation2 = tool.build(params2);
+      const result2 = await invocation2.execute(new AbortController().signal);
+      expect(result2.error).toBeUndefined();
+      expect(fs.readFileSync(testFilePath, 'utf8')).toBe('third content here');
     });
   });
 });

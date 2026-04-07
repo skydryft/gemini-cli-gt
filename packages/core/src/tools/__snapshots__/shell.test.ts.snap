@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`ShellTool > getDescription > should return the non-windows description when not on windows 1`] = `
-"This tool executes a given shell command as \`bash -c <command>\`. Command can start background processes using \`&\`. Command is executed as a subprocess that leads its own process group. Command process group can be terminated as \`kill -- -PGID\` or signaled as \`kill -s SIGNAL -- -PGID\`.
+"This tool executes a given shell command as \`bash -c <command>\`. Use this for build commands, test execution, git operations, and system commands. Do NOT use this for file reading, writing, searching, or editing — use the dedicated file tools (read_file, write_file, replace, glob, grep_search) instead, as they are more reliable. Command can start background processes using \`&\`. Command is executed as a subprocess that leads its own process group. Command process group can be terminated as \`kill -- -PGID\` or signaled as \`kill -s SIGNAL -- -PGID\`.
 
       Efficiency Guidelines:
       - Quiet Flags: Always prefer silent or quiet flags (e.g., \`npm install --silent\`, \`git --no-pager\`) to reduce output volume while still capturing necessary information.
@@ -35,7 +35,7 @@ exports[`ShellTool > getDescription > should return the windows description when
 `;
 
 exports[`ShellTool > getSchema > should return the base schema when no modelId is provided 1`] = `
-"This tool executes a given shell command as \`bash -c <command>\`. Command can start background processes using \`&\`. Command is executed as a subprocess that leads its own process group. Command process group can be terminated as \`kill -- -PGID\` or signaled as \`kill -s SIGNAL -- -PGID\`.
+"This tool executes a given shell command as \`bash -c <command>\`. Use this for build commands, test execution, git operations, and system commands. Do NOT use this for file reading, writing, searching, or editing — use the dedicated file tools (read_file, write_file, replace, glob, grep_search) instead, as they are more reliable. Command can start background processes using \`&\`. Command is executed as a subprocess that leads its own process group. Command process group can be terminated as \`kill -- -PGID\` or signaled as \`kill -s SIGNAL -- -PGID\`.
 
       Efficiency Guidelines:
       - Quiet Flags: Always prefer silent or quiet flags (e.g., \`npm install --silent\`, \`git --no-pager\`) to reduce output volume while still capturing necessary information.
@@ -52,7 +52,7 @@ exports[`ShellTool > getSchema > should return the base schema when no modelId i
 `;
 
 exports[`ShellTool > getSchema > should return the schema from the resolver when modelId is provided 1`] = `
-"This tool executes a given shell command as \`bash -c <command>\`. Command can start background processes using \`&\`. Command is executed as a subprocess that leads its own process group. Command process group can be terminated as \`kill -- -PGID\` or signaled as \`kill -s SIGNAL -- -PGID\`.
+"This tool executes a given shell command as \`bash -c <command>\`. Use this for build commands, test execution, git operations, and system commands. Do NOT use this for file reading, writing, searching, or editing — use the dedicated file tools (read_file, write_file, replace, glob, grep_search) instead, as they are more reliable. Command can start background processes using \`&\`. Command is executed as a subprocess that leads its own process group. Command process group can be terminated as \`kill -- -PGID\` or signaled as \`kill -s SIGNAL -- -PGID\`.
 
       Efficiency Guidelines:
       - Quiet Flags: Always prefer silent or quiet flags (e.g., \`npm install --silent\`, \`git --no-pager\`) to reduce output volume while still capturing necessary information.

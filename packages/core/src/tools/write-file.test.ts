@@ -19,6 +19,7 @@ import {
   type WriteFileToolParams,
 } from './write-file.js';
 import { ToolErrorType } from './tool-error.js';
+import { FileStateCache } from './file-state-cache.js';
 import {
   ToolConfirmationOutcome,
   type FileDiff,
@@ -75,6 +76,7 @@ vi.mocked(IdeClient.getInstance).mockResolvedValue(
 // Mock Config
 const fsService = new StandardFileSystemService();
 const mockConfigInternal = {
+  fileStateCache: new FileStateCache(),
   getTargetDir: () => rootDir,
   getApprovalMode: vi.fn(() => ApprovalMode.DEFAULT),
   setApprovalMode: vi.fn(),

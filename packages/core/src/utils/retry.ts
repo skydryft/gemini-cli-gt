@@ -355,18 +355,19 @@ export async function retryWithBackoff<T>(
           classifiedError instanceof RetryableQuotaError &&
           classifiedError.retryDelayMs !== undefined
         ) {
-          currentDelay = Math.max(currentDelay, classifiedError.retryDelayMs);
-          // Positive jitter up to +20% while respecting server minimum delay
-          const jitter = currentDelay * 0.2 * Math.random();
-          const delayWithJitter = currentDelay + jitter;
+          // The server tells us exactly when quota resets. Trust it.
+          // Wait the server-specified delay + 1 second buffer, regardless of
+          // what the exponential backoff thinks. No point retrying before the
+          // server says we can.
+          const serverDelay = classifiedError.retryDelayMs + 1000;
           debugLogger.warn(
-            `Attempt ${attempt} failed: ${classifiedError.message}. Retrying after ${Math.round(delayWithJitter)}ms...`,
+            `Attempt ${attempt} failed: ${classifiedError.message}. Retrying after ${Math.round(serverDelay)}ms (server-specified delay + 1s buffer)...`,
           );
           if (onRetry) {
-            onRetry(attempt, error, delayWithJitter);
+            onRetry(attempt, error, serverDelay);
           }
-          await delay(delayWithJitter, signal);
-          currentDelay = Math.min(maxDelayMs, currentDelay * 2);
+          await delay(serverDelay, signal);
+          // Don't escalate — next retry should also use the server delay
           continue;
         } else {
           const errorStatus = getErrorStatus(error);

@@ -139,6 +139,17 @@ class ReadFileToolInvocation extends BaseToolInvocation<
       };
     }
 
+    // Record the read in the file state cache for read-before-edit enforcement.
+    // We read the raw content for hashing (OS-cached, negligible cost).
+    try {
+      const rawContent = await this.config
+        .getFileSystemService()
+        .readTextFile(this.resolvedPath);
+      this.config.fileStateCache.recordRead(this.resolvedPath, rawContent);
+    } catch {
+      // Non-fatal: if we can't record the read, don't block the tool
+    }
+
     let llmContent: PartListUnion;
     if (result.isTruncated) {
       const [start, end] = result.linesShown!;

@@ -19,6 +19,7 @@ import { DEFAULT_GEMINI_MODEL } from '../config/models.js';
 import type { PolicyEngine } from '../policy/policy-engine.js';
 import { HookSystem } from '../hooks/hookSystem.js';
 import { HookType, HookEventName } from '../hooks/types.js';
+import { ToolCallTracker } from '../core/toolCallTracker.js';
 
 function createMockConfig(overrides: Partial<Config> = {}): Config {
   const defaultToolRegistry = {
@@ -76,6 +77,7 @@ function createMockConfig(overrides: Partial<Config> = {}): Config {
         check: async () => ({ decision: 'allow' }),
       }) as unknown as PolicyEngine,
     isContextManagementEnabled: () => false,
+    toolCallTracker: new ToolCallTracker(),
   } as unknown as Config;
 
   const mockConfig = Object.assign({}, baseConfig, overrides) as Config;

@@ -16,6 +16,7 @@ import {
 import { detectLineEnding } from '../utils/textUtils.js';
 import { WriteFileTool } from './write-file.js';
 import { EditTool } from './edit.js';
+import { FileStateCache } from './file-state-cache.js';
 import type { Config } from '../config/config.js';
 import { ApprovalMode } from '../policy/types.js';
 import { ToolConfirmationOutcome } from './tools.js';
@@ -54,6 +55,7 @@ const mockEnsureCorrectFileContent = vi.fn<typeof ensureCorrectFileContent>();
 // Mock Config
 const fsService = new StandardFileSystemService();
 const mockConfigInternal = {
+  fileStateCache: new FileStateCache(),
   getTargetDir: () => rootDir,
   getApprovalMode: vi.fn(() => ApprovalMode.DEFAULT),
   setApprovalMode: vi.fn(),
@@ -243,6 +245,10 @@ describe('Line Ending Preservation', () => {
       const filePath = path.join(rootDir, 'edit_crlf.txt');
       const originalContent = 'line1\r\nline2\r\nline3\r\n';
       fs.writeFileSync(filePath, Buffer.from(originalContent));
+      mockConfigInternal.fileStateCache.recordRead(
+        filePath,
+        originalContent.replace(/\r\n/g, '\n'),
+      );
 
       const oldString = 'line2';
       const newString = 'modified';

@@ -313,7 +313,7 @@ describe('classifyGoogleError', () => {
     expect((result as TerminalQuotaError).reason).toBe('RATE_LIMIT_EXCEEDED');
   });
 
-  it('should return TerminalQuotaError for Cloud Code QUOTA_EXHAUSTED', () => {
+  it('should return RetryableQuotaError for Cloud Code QUOTA_EXHAUSTED with short delay', () => {
     const apiError: GoogleApiError = {
       code: 429,
       message:
@@ -338,7 +338,70 @@ describe('classifyGoogleError', () => {
     };
     vi.spyOn(errorParser, 'parseGoogleApiError').mockReturnValue(apiError);
     const result = classifyGoogleError(new Error());
+    expect(result).toBeInstanceOf(RetryableQuotaError);
+    expect((result as RetryableQuotaError).retryDelayMs).toBeCloseTo(539, -2);
+  });
+
+  it('should return TerminalQuotaError for Cloud Code QUOTA_EXHAUSTED with long delay', () => {
+    const apiError: GoogleApiError = {
+      code: 429,
+      message:
+        'You have exhausted your capacity on this model. Your quota will reset after 3600s.',
+      details: [
+        {
+          '@type': 'type.googleapis.com/google.rpc.ErrorInfo',
+          reason: 'QUOTA_EXHAUSTED',
+          domain: 'cloudcode-pa.googleapis.com',
+          metadata: {
+            uiMessage: 'true',
+            model: 'gemini-2.5-pro',
+          },
+        },
+        {
+          '@type': 'type.googleapis.com/google.rpc.RetryInfo',
+          retryDelay: '3600s',
+        },
+      ],
+    };
+    vi.spyOn(errorParser, 'parseGoogleApiError').mockReturnValue(apiError);
+    const result = classifyGoogleError(new Error());
     expect(result).toBeInstanceOf(TerminalQuotaError);
+  });
+
+  it('should return TerminalQuotaError for Cloud Code QUOTA_EXHAUSTED with no retry delay', () => {
+    const apiError: GoogleApiError = {
+      code: 429,
+      message: 'You have exhausted your capacity on this model.',
+      details: [
+        {
+          '@type': 'type.googleapis.com/google.rpc.ErrorInfo',
+          reason: 'QUOTA_EXHAUSTED',
+          domain: 'cloudcode-pa.googleapis.com',
+          metadata: {
+            uiMessage: 'true',
+            model: 'gemini-2.5-pro',
+          },
+        },
+      ],
+    };
+    vi.spyOn(errorParser, 'parseGoogleApiError').mockReturnValue(apiError);
+    const result = classifyGoogleError(new Error());
+    expect(result).toBeInstanceOf(TerminalQuotaError);
+  });
+
+  it('should parse "quota will reset after Xs" message as retryable with correct delay', () => {
+    // When the error has no structured details but the message contains
+    // "quota will reset after Xs", it should be classified as retryable
+    // with the correct delay extracted from the message.
+    vi.spyOn(errorParser, 'parseGoogleApiError').mockReturnValue(null);
+    const error = new Error(
+      'You have exhausted your capacity on this model. Your quota will reset after 5s.',
+    );
+    // Simulate a 429 status code on the error
+    (error as unknown as Record<string, unknown>)['status'] = 429;
+    const result = classifyGoogleError(error);
+    expect(result).toBeInstanceOf(RetryableQuotaError);
+    expect((result as RetryableQuotaError).retryDelayMs).toBe(5000);
   });
 
   it('should return TerminalQuotaError for INSUFFICIENT_G1_CREDITS_BALANCE without domain', () => {

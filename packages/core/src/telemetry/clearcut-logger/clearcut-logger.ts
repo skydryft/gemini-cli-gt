@@ -574,8 +574,11 @@ export class ClearcutLogger {
           );
         }
 
-        // Re-queue failed events for retry
-        this.requeueFailedEvents(eventsToSend);
+        // Only re-queue on server errors (5xx) which are transient.
+        // Client errors (4xx) indicate a bad payload that will never succeed on retry.
+        if (response.status >= 500) {
+          this.requeueFailedEvents(eventsToSend);
+        }
       }
     } catch (e: unknown) {
       if (this.config?.getDebugMode()) {

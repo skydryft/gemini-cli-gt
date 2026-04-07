@@ -845,6 +845,55 @@ class EditToolInvocation
       };
     }
 
+    // Enforce read-before-edit: the model must have called read_file on this
+    // file before attempting to edit it. Skip for new file creation (old_string === '').
+    if (this.params.old_string !== '') {
+      const fileStateCache = this.config.fileStateCache;
+
+      // Read the file once — used for both existence check and staleness check.
+      // If the file doesn't exist, skip enforcement and let calculateEdit
+      // produce the proper FILE_NOT_FOUND error.
+      let currentContentForCheck: string | null = null;
+      try {
+        currentContentForCheck = await this.config
+          .getFileSystemService()
+          .readTextFile(this.resolvedPath);
+      } catch {
+        // File doesn't exist or can't be read — skip enforcement
+      }
+
+      if (currentContentForCheck !== null) {
+        if (!fileStateCache.hasBeenRead(this.resolvedPath)) {
+          const errorMsg = `You must call read_file on "${this.params.file_path}" before editing it. The replace tool requires reading the file first to ensure you have the current content.`;
+          return {
+            llmContent: errorMsg,
+            returnDisplay: `Error: ${errorMsg}`,
+            error: {
+              message: errorMsg,
+              type: ToolErrorType.EDIT_PREPARATION_FAILURE,
+            },
+          };
+        }
+
+        if (
+          !fileStateCache.isContentCurrent(
+            this.resolvedPath,
+            currentContentForCheck.replace(/\r\n/g, '\n'),
+          )
+        ) {
+          const errorMsg = `File "${this.params.file_path}" has been modified since your last read. Call read_file to get the current contents before editing.`;
+          return {
+            llmContent: errorMsg,
+            returnDisplay: `Error: ${errorMsg}`,
+            error: {
+              message: errorMsg,
+              type: ToolErrorType.EDIT_PREPARATION_FAILURE,
+            },
+          };
+        }
+      }
+    }
+
     let editData: CalculatedEdit;
     try {
       editData = await this.calculateEdit(this.params, signal);
@@ -889,6 +938,12 @@ class EditToolInvocation
       await this.config
         .getFileSystemService()
         .writeTextFile(this.resolvedPath, finalContent);
+
+      // Update file state cache so subsequent edits don't require another read
+      this.config.fileStateCache.recordWrite(
+        this.resolvedPath,
+        finalContent.replace(/\r\n/g, '\n'),
+      );
 
       let displayResult: ToolResultDisplay;
       if (editData.isNewFile) {

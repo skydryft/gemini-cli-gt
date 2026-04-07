@@ -162,6 +162,13 @@ ONLY use the \`exit_plan_mode\` tool to present the plan for formal approval AFT
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -346,6 +353,13 @@ An approved plan is available for this task at \`/tmp/plans/feature-x.md\`.
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -639,6 +653,13 @@ ONLY use the \`exit_plan_mode\` tool to present the plan for formal approval AFT
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -798,6 +819,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -943,6 +971,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -1071,6 +1106,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -1724,6 +1766,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -1883,6 +1932,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -2046,6 +2102,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -2209,6 +2272,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -2368,6 +2438,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -2521,6 +2598,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -2679,6 +2763,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -2838,6 +2929,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -3136,6 +3234,13 @@ You are operating with a persistent file-based task tracking system located at \
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -3540,6 +3645,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -3699,6 +3811,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -3972,6 +4091,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.
@@ -4131,6 +4257,13 @@ Operate using a **Research -> Strategy -> Execution** lifecycle. For the Executi
 - **Security First:** Always apply security best practices. Never introduce code that exposes, logs, or commits secrets, API keys, or other sensitive information.
 
 ## Tool Usage
+- **Tool Preferences:** Use the dedicated file tools instead of shell equivalents for reliability:
+  - Use the file reading tool (not \`cat\`, \`head\`, or \`tail\`) for reading files.
+  - Use the file search tools (not \`find\`, \`ls\`, \`grep\`, or \`rg\`) for searching files by name or content.
+  - Use \`replace\` (not \`sed\` or \`awk\`) for targeted modifications under 50 lines.
+  - Use \`write_file\` (not \`echo >\` or \`tee\`) for creating new files or rewriting files where more than 50% of content changes.
+  - Use \`run_shell_command\` for build commands, test execution, git operations, and system commands only.
+- **Verify After Modify:** After every file modification, verify the change by reading the file or running relevant tests.
 - **Parallelism & Sequencing:** Tools execute in parallel by default. Execute multiple independent tool calls in parallel when feasible (e.g., searching, reading files, independent shell commands, or editing *different* files). If a tool depends on the output or side-effects of a previous tool in the same turn (e.g., running a shell command that depends on the success of a previous command), you MUST set the \`wait_for_previous\` parameter to \`true\` on the dependent tool to ensure sequential execution.
 - **File Editing Collisions:** Do NOT make multiple calls to the \`replace\` tool for the SAME file in a single turn. To make multiple edits to the same file, you MUST perform them sequentially across multiple conversational turns to prevent race conditions and ensure the file state is accurate before each edit.
 - **Command Execution:** Use the \`run_shell_command\` tool for running shell commands, remembering the safety rule to explain modifying commands first.

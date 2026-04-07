@@ -289,6 +289,9 @@ describe('Gemini Client (client.ts)', () => {
       getModelAvailabilityService: vi
         .fn()
         .mockReturnValue(createAvailabilityServiceMock()),
+      toolCallTracker: new (
+        await import('./toolCallTracker.js')
+      ).ToolCallTracker(),
     } as unknown as Config;
     mockConfig.getHookSystem = vi.fn().mockReturnValue(mockHookSystem);
 
