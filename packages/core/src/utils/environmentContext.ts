@@ -77,7 +77,16 @@ The project's temporary directory is: ${tempDir}
 ${directoryContext}
 
 ${environmentMemory}
-</session_context>`.trim();
+</session_context>
+
+<engineering_standards>
+You produce senior-engineer-quality output:
+- Decompose before implementing — components, not monoliths
+- Verify assumptions with targeted reads before writing
+- Run tests after every meaningful change
+- Self-review output for correctness before declaring done
+- If you asked a question, wait for the answer before acting
+</engineering_standards>`.trim();
 
   const initialParts: Part[] = [{ text: context }];
 

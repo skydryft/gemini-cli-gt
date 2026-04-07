@@ -117,7 +117,7 @@ export const GEMINI_3_SET: CoreToolSet = {
 
   write_file: {
     name: WRITE_FILE_TOOL_NAME,
-    description: `Writes the complete content to a file, automatically creating missing parent directories. Overwrites existing files. The user has the ability to modify 'content' before it is saved. Best for new or small files; use '${EDIT_TOOL_NAME}' for targeted edits to large files.`,
+    description: `Writes the complete content to a file, automatically creating missing parent directories. Overwrites existing files. The user has the ability to modify 'content' before it is saved. Best for new or small files; use '${EDIT_TOOL_NAME}' for targeted edits to large files. For files that will exceed 50 lines, consider splitting into smaller components, partials, or modules first.`,
     parametersJsonSchema: {
       type: 'object',
       properties: {
@@ -538,6 +538,7 @@ DO NOT use this tool for simple tasks that can be completed in less than 2 steps
 5. Mark a subtask as completed when you have completed it.
 6. Mark a subtask as cancelled if the subtask is no longer needed.
 7. You must update the todo list as soon as you start, stop or cancel a subtask. Don't batch or wait to update the todo list.
+8. Update existing task entries in-place. Never recreate or overwrite completed tasks. Only mark tasks complete after verification confirms success.
 
 
 ## Examples of When to Use the Todo List
